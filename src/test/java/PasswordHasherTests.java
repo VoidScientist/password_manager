@@ -5,6 +5,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
 
 public class PasswordHasherTests {
@@ -28,6 +29,21 @@ public class PasswordHasherTests {
         );
 
         assertEquals(login_hash, hash);
+
+    }
+
+    @Test
+    public void HashDifferenceSamePassword() throws InvalidKeySpecException, NoSuchAlgorithmException {
+
+        String result = PasswordHasher.hashPassword(TEST_PASSWORD.toCharArray());
+        String result2 = PasswordHasher.hashPassword(TEST_PASSWORD.toCharArray());
+
+        System.out.println(
+                "Result 1: " + result
+                + "\nResult 2: " + result2
+        );
+
+        assertNotEquals(result, result2);
 
     }
 
