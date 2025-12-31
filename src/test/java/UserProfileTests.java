@@ -1,4 +1,5 @@
 import Entities.UserProfile;
+import Utilities.Config;
 import Utilities.Security.PasswordHasher;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
@@ -20,7 +21,7 @@ public class UserProfileTests {
     @BeforeAll
     public static void init() throws NoSuchAlgorithmException, InvalidKeySpecException {
 
-        emf = Persistence.createEntityManagerFactory("secur2i");
+        emf = Persistence.createEntityManagerFactory(Config.getPersistenceUnit());
 
         EntityManager em = emf.createEntityManager();
         EntityTransaction tx = em.getTransaction();
