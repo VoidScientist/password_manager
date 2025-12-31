@@ -1,11 +1,22 @@
 package Entities;
 
+import Utilities.Security.PasswordHasher;
+import jakarta.persistence.*;
+
 import java.util.Objects;
 
+@Entity
 public class UserProfile {
 
+    @Id
+    @Column(name="UUID")
+    @GeneratedValue(strategy = GenerationType.UUID)
     private String uuid;
+
+    @Column(name="USERNAME", unique = true)
     private String username;
+
+    @Column(name="PASSWORD_HASH")
     private String passwordHash;
 
     public UserProfile(String username, String passwordHash) {
@@ -13,9 +24,30 @@ public class UserProfile {
         this.passwordHash = passwordHash;
     }
 
+    public UserProfile() {
+        this.username = "";
+        this.passwordHash = "";
+    }
+
     public boolean connect(String password) {
 
-        return true;
+        String[] tmp = passwordHash.split("\\$");
+        String salt = tmp[0];
+        String hash = tmp[1];
+
+        String connectionHash = "";
+
+        try {
+
+            connectionHash = PasswordHasher.hashPasswordFromSalt(salt, password.toCharArray());
+
+        } catch (Exception e) {
+
+            return false;
+
+        }
+
+        return connectionHash.equals(hash);
 
     }
 
@@ -23,24 +55,12 @@ public class UserProfile {
         return uuid;
     }
 
-    public void setUuid(String uuid) {
-        this.uuid = uuid;
-    }
-
     public String getUsername() {
         return username;
     }
 
-    public void setUsername(String username) {
-        this.username = username;
-    }
-
     public String getPasswordHash() {
         return passwordHash;
-    }
-
-    public void setPasswordHash(String passwordHash) {
-        this.passwordHash = passwordHash;
     }
 
     @Override
