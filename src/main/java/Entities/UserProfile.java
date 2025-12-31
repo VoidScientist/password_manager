@@ -39,34 +39,6 @@ public class UserProfile {
         this.passwordHash = "";
     }
 
-    // prend en paramètre un mot de passe, et retourne un booléen en fonction de s'il est le bon mdp.
-    public boolean connect(String password) {
-
-        // sépare le passwordHash en son salt et hash
-        String[] tmp = passwordHash.split("\\$");
-        String salt = tmp[0];
-        String hash = tmp[1];
-
-        String connectionHash = "";
-
-        // essaie d'obtenir un hash à partir du mot de passe en argument
-        // si une exception survient, on dis que la connexion a échouée.
-        //TODO: considérer un code d'erreur / des logs pour expliciter l'exception en question
-        try {
-
-            connectionHash = PasswordHasher.hashPasswordFromSalt(salt, password.toCharArray());
-
-        } catch (Exception e) {
-
-            return false;
-
-        }
-
-        // retourne la correspondance des mots de passe
-        return connectionHash.equals(hash);
-
-    }
-
     public String getUuid() {
         return uuid;
     }
