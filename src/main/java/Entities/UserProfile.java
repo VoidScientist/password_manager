@@ -1,6 +1,5 @@
 package Entities;
 
-import Utilities.Security.PasswordHasher;
 import jakarta.persistence.*;
 
 import java.util.*;

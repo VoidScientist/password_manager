@@ -29,7 +29,7 @@ public class ConnectionTests {
     }
 
     @Test
-    public void rightPassword() throws NoSuchAlgorithmException, InvalidKeySpecException {
+    public void rightPassword() {
 
         UserProfile user = userRep.findByUsername(USERNAME);
 
@@ -40,7 +40,7 @@ public class ConnectionTests {
     }
 
     @Test
-    public void wrongPassword() throws NoSuchAlgorithmException, InvalidKeySpecException {
+    public void wrongPassword() {
 
         UserProfile user = userRep.findByUsername(USERNAME);
 
