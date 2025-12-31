@@ -18,7 +18,7 @@ public class ConnectionTests {
     @BeforeAll
     public static void init() throws NoSuchAlgorithmException, InvalidKeySpecException {
 
-        userRep = new UserProfileRepository(Config.getPersistenceUnit());
+        userRep = new UserProfileRepository(Config.getTestPersistenceUnit());
 
         String hash = PasswordHasher.hashPassword(PASSWORD.toCharArray());
 

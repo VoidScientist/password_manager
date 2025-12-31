@@ -20,7 +20,7 @@ public class JPATests {
     @BeforeAll
     public static void init() {
 
-        emf = Persistence.createEntityManagerFactory(Config.getPersistenceUnit());
+        emf = Persistence.createEntityManagerFactory(Config.getTestPersistenceUnit());
 
     }
 
