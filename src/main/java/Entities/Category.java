@@ -2,6 +2,7 @@ package Entities;
 
 import jakarta.persistence.*;
 
+import java.util.List;
 import java.util.Objects;
 
 @Entity
@@ -17,6 +18,13 @@ public class Category {
 
     @Column(name="DESC")
     private String desc;
+
+    @ManyToOne
+    @JoinColumn(name="OWNER")
+    private UserProfile owner;
+
+    @OneToMany(mappedBy = "category")
+    private List<Profile> profiles;
 
     public Category(String name, String desc) {
         this.name = name;
