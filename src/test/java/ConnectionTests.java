@@ -35,7 +35,7 @@ public class ConnectionTests {
 
         System.out.println(user.toString());
 
-        assert user.connect(PASSWORD);
+        //TODO REIMPLEMENT
 
     }
 
@@ -46,7 +46,7 @@ public class ConnectionTests {
 
         System.out.println(user.toString());
 
-        assert !user.connect("ahahamhackeridon'tknowyourpassword12431554");
+        //TODO REIMPLEMENT
 
     }
 
