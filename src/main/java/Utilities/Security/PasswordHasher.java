@@ -17,46 +17,47 @@ public class PasswordHasher {
 
     private static final String ALGORITHM = "PBKDF2WithHmacSHA256";
 
-    // used at register time
+    // fonction utilisée à l'inscription
     public static String hashPassword(char[] password) throws NoSuchAlgorithmException, InvalidKeySpecException {
 
-        // creates the salt for the hash
+        // crée le salt du hash
         SecureRandom random = new SecureRandom();
         byte[] salt = new byte[SALT_LENGTH];
 
         random.nextBytes(salt);
 
-        // prepares the PBEKeySpec to generate the secret
+        // prépare la KeySpec pour la création du secret
         KeySpec spec = new PBEKeySpec(password, salt, ITERATION_COUNT, KEY_LENGTH);
         SecretKeyFactory factory = SecretKeyFactory.getInstance(ALGORITHM);
 
-        // retrieve the hash
+        // récupère le hash après avoir généré le secret
         byte[] hash = factory.generateSecret(spec).getEncoded();
 
-        // clear password content in memory
+        // nettoie le mot de passe en mémoire (est-ce utile??)
         Arrays.fill(password, '\0');
 
-        // return HashInfo record class to be used by caller
+        // renvoie un string en base 64 qui contient le salt et hash séparé par un $
+        // FORMAT: [salt]$[hash]
         return Base64.getEncoder().encodeToString(salt) + "$" + Base64.getEncoder().encodeToString(hash);
 
     }
 
-    // used at login time
+    // fonction utilisée lors de la connexion
     public static String hashPasswordFromSalt(String b64_salt, char[] password) throws InvalidKeySpecException, NoSuchAlgorithmException {
 
         byte[] salt = Base64.getDecoder().decode(b64_salt);
 
-        // prepares the PBEKeySpec to generate the secret
+        // prépare la KeySpec pour la création du secret
         KeySpec spec = new PBEKeySpec(password, salt, ITERATION_COUNT, KEY_LENGTH);
         SecretKeyFactory factory = SecretKeyFactory.getInstance(ALGORITHM);
 
-        // clear password in memory
+        // nettoie le mot de passe en mémoire (est-ce utile??)
         Arrays.fill(password, '\0');
 
-        // computes the hash
+        // récupère le hash après avoir généré le secret
         byte[] hash = factory.generateSecret(spec).getEncoded();
 
-        // return the hash as b64 string
+        // renvoie simplement le hash en base64
         return Base64.getEncoder().encodeToString(hash);
 
     }
