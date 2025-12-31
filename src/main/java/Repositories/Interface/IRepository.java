@@ -4,11 +4,11 @@ import java.util.List;
 
 public interface IRepository<ModelType, ID> {
 
-    public ModelType findById(ID id);
-    public List<ModelType> readAll();
+    ModelType findById(ID id);
+    List<ModelType> readAll();
 
-    public ModelType save(ModelType model);
-    public void delete(ModelType model);
+    ModelType save(ModelType model);
+    void delete(ModelType model);
 
 
 }
