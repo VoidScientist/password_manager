@@ -4,6 +4,7 @@ import Utilities.Security.PasswordHasher;
 import jakarta.persistence.*;
 
 import java.util.Objects;
+import java.util.Set;
 
 // une classe permettant de stocker les informations de connexion d'un utilisateur
 // afin qu'il puisse se connecter à son coffre fort.
@@ -21,6 +22,12 @@ public class UserProfile {
 
     @Column(name="PASSWORD_HASH")
     private String passwordHash;
+
+    @OneToMany(mappedBy="owner")
+    private Set<Profile> profiles;
+
+    @OneToMany(mappedBy="owner")
+    private Set<Category> categories;
 
     public UserProfile(String username, String passwordHash) {
         this.username = username;
