@@ -22,7 +22,7 @@
 
     </persistence-unit>
 
-    <persistence-unit name="test-db">
+    <persistence-unit name="test_db">
 
         <class>Entities.UserProfile</class>
         <class>Entities.Profile</class>
