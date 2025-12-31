@@ -9,6 +9,9 @@ import java.util.Base64;
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.PBEKeySpec;
 
+/**
+ * Classe statique utilisée pour hasher les mots de passes.
+ */
 public class PasswordHasher {
 
     private static final int ITERATION_COUNT = 65536;
