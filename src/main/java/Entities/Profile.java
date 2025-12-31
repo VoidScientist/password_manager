@@ -6,7 +6,7 @@ import java.util.Objects;
 
 /**
  * La classe Profile est l'entité JPA contenant les informations liées aux comptes enregistrés.
- *
+ * <br><br>
  * C'est la propriétaire des relations avec les autres entités dans la base de donnée.
  */
 @Entity

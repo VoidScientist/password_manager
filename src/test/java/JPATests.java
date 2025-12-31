@@ -103,8 +103,8 @@ public class JPATests {
         em.persist(profile1);
         em.persist(profile2);
 
-        category.addProfile(profile1);
-        category.addProfile(profile2);
+        assert category.addProfile(profile1);
+        assert category.addProfile(profile2);
 
         tx.commit();
 
@@ -141,8 +141,8 @@ public class JPATests {
 
         category.addProfile(profile1);
 
-        user.addCategory(category);
-        user.addProfile(profile2);
+        assert user.addCategory(category);
+        assert user.addProfile(profile2);
 
         tx.commit();
 
