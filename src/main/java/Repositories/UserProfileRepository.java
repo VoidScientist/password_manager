@@ -44,7 +44,8 @@ public class UserProfileRepository extends JPARepository implements IRepository<
     public List<UserProfile> readAll() {
 
         return this.getEntityManager()
-                .createQuery("select u from UserProfile u", UserProfile.class).getResultList();
+                .createQuery("select u from UserProfile u", UserProfile.class)
+                .getResultList();
 
     }
 
