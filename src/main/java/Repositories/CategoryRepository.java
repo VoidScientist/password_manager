@@ -1,7 +1,6 @@
 package Repositories;
 
 import Entities.Category;
-import Entities.Profile;
 import Repositories.Interface.ISecureRepository;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityTransaction;
