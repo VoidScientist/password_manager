@@ -22,10 +22,10 @@ public class UserProfile {
     @Column(name="PASSWORD_HASH")
     private String passwordHash;
 
-    @OneToMany(mappedBy="owner", fetch=FetchType.EAGER)
+    @OneToMany(mappedBy="owner")
     private final Set<Profile> profiles = new HashSet<>();
 
-    @OneToMany(mappedBy="owner", fetch=FetchType.EAGER)
+    @OneToMany(mappedBy="owner")
     private final Set<Category> categories = new HashSet<>();
 
     public UserProfile(String username, String passwordHash) {

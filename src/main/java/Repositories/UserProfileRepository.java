@@ -9,15 +9,17 @@ import java.util.List;
 
 public class UserProfileRepository extends JPARepository implements IRepository<UserProfile, String> {
 
-    public UserProfileRepository(String pUnit) {
-        super(pUnit);
+
+    public UserProfileRepository(EntityManager entityManager) {
+        super(entityManager);
     }
 
     public UserProfile findByUsername(String username) {
 
-        try (EntityManager em = this.createEntityManager()) {
+        try {
 
-            return em.createQuery("select u from UserProfile u where u.username = :username", UserProfile.class)
+            return this.getEntityManager()
+                    .createQuery("select u from UserProfile u where u.username = :username", UserProfile.class)
                     .setParameter("username", username)
                     .getSingleResult();
 
@@ -32,32 +34,25 @@ public class UserProfileRepository extends JPARepository implements IRepository<
     @Override
     public UserProfile findById(String uuid) {
 
-        try (EntityManager em = this.createEntityManager()) {
-
-            return em.find(UserProfile.class, uuid);
-
-        }
+        return this.getEntityManager().find(UserProfile.class, uuid);
 
     }
 
     @Override
     public List<UserProfile> readAll() {
 
-        try (EntityManager em = this.createEntityManager()) {
-
-            return em.createQuery("select u from UserProfile u", UserProfile.class).getResultList();
-
-        }
+        return this.getEntityManager()
+                .createQuery("select u from UserProfile u", UserProfile.class).getResultList();
 
     }
 
     @Override
     public UserProfile save(UserProfile model) {
 
-        EntityManager em = this.createEntityManager();
+        EntityManager em = this.getEntityManager();
         EntityTransaction tx = em.getTransaction();
 
-        try(em) {
+        try {
 
             tx.begin();
             model = em.merge(model);
@@ -77,12 +72,12 @@ public class UserProfileRepository extends JPARepository implements IRepository<
     @Override
     public void delete(UserProfile model) {
 
-        EntityManager em = this.createEntityManager();
+        EntityManager em = this.getEntityManager();
         EntityTransaction tx = em.getTransaction();
 
         String uuid = model.getUuid();
 
-        try(em) {
+        try {
 
             tx.begin();
             UserProfile user = em.find(UserProfile.class, uuid);

@@ -2,6 +2,9 @@ import Entities.UserProfile;
 import Repositories.UserProfileRepository;
 import Utilities.Config;
 import Utilities.Security.PasswordHasher;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.Persistence;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -18,12 +21,15 @@ public class UserProfileRepositoryTests {
     @BeforeAll
     public static void init() {
 
-        userRep = new UserProfileRepository(Config.getTestPersistenceUnit());
+        EntityManagerFactory emf = Persistence.createEntityManagerFactory(Config.getTestPersistenceUnit());
+        EntityManager em = emf.createEntityManager();
+
+        userRep = new UserProfileRepository(em);
 
     }
 
     @Test
-    public void createUserProfile() throws NoSuchAlgorithmException, InvalidKeySpecException {
+    public void createThenRemoveUserProfile() throws NoSuchAlgorithmException, InvalidKeySpecException {
 
         String hash = PasswordHasher.hashPassword(PASSWORD.toCharArray());
         UserProfile user = new UserProfile(USERNAME, hash);
@@ -32,11 +38,21 @@ public class UserProfileRepositoryTests {
 
         UserProfile savedUser = userRep.findByUsername(USERNAME);
 
+        System.out.println("Résultat sauvegarde / chargement (dans cet ordre)");
         System.out.println(user);
         System.out.println(savedUser);
 
         assert savedUser != null;
         assert savedUser.equals(user);
+
+        userRep.delete(user);
+
+        UserProfile savedUser2 = userRep.findByUsername(USERNAME);
+
+        System.out.println("\nAprès suppression:");
+        System.out.println(savedUser2);
+
+        assert savedUser2 == null;
 
     }
 

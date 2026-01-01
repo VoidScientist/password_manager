@@ -25,7 +25,7 @@ public class Category {
     @JoinColumn(name="OWNER")
     private UserProfile owner;
 
-    @OneToMany(mappedBy = "category", fetch=FetchType.EAGER)
+    @OneToMany(mappedBy = "category")
     private final Set<Profile> profiles = new HashSet<>();
 
     public Category(String name, String desc) {
