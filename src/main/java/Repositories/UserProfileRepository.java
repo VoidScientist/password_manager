@@ -7,14 +7,10 @@ import jakarta.persistence.*;
 
 import java.util.List;
 
-public class UserProfileRepository implements IRepository<UserProfile, String> {
-
-    private final EntityManagerFactory emf;
+public class UserProfileRepository extends JPARepository implements IRepository<UserProfile, String> {
 
     public UserProfileRepository(String pUnit) {
-
-        this.emf = Persistence.createEntityManagerFactory(pUnit);
-
+        super(pUnit);
     }
 
     public UserProfile findByUsername(String username) {
