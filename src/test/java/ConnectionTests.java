@@ -1,6 +1,6 @@
 import Entities.UserProfile;
-import Utilities.Config;
 import Repositories.UserProfileRepository;
+import Utilities.Config;
 import Utilities.Security.PasswordHasher;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;

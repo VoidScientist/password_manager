@@ -3,7 +3,9 @@ package Repositories;
 
 import Entities.UserProfile;
 import Repositories.Interface.IRepository;
-import jakarta.persistence.*;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityTransaction;
+import jakarta.persistence.NoResultException;
 
 import java.util.List;
 
