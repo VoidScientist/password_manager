@@ -15,7 +15,7 @@ public class UserProfileRepository extends JPARepository implements IRepository<
 
     public UserProfile findByUsername(String username) {
 
-        try (EntityManager em = emf.createEntityManager()) {
+        try (EntityManager em = this.createEntityManager()) {
 
             return em.createQuery("select u from UserProfile u where u.username = :username", UserProfile.class)
                     .setParameter("username", username)
@@ -32,7 +32,7 @@ public class UserProfileRepository extends JPARepository implements IRepository<
     @Override
     public UserProfile findById(String uuid) {
 
-        try (EntityManager em = emf.createEntityManager()) {
+        try (EntityManager em = this.createEntityManager()) {
 
             return em.find(UserProfile.class, uuid);
 
@@ -43,7 +43,7 @@ public class UserProfileRepository extends JPARepository implements IRepository<
     @Override
     public List<UserProfile> readAll() {
 
-        try (EntityManager em = emf.createEntityManager()) {
+        try (EntityManager em = this.createEntityManager()) {
 
             return em.createQuery("select u from UserProfile u", UserProfile.class).getResultList();
 
@@ -54,7 +54,7 @@ public class UserProfileRepository extends JPARepository implements IRepository<
     @Override
     public UserProfile save(UserProfile model) {
 
-        EntityManager em = emf.createEntityManager();
+        EntityManager em = this.createEntityManager();
         EntityTransaction tx = em.getTransaction();
 
         try(em) {
@@ -77,7 +77,7 @@ public class UserProfileRepository extends JPARepository implements IRepository<
     @Override
     public void delete(UserProfile model) {
 
-        EntityManager em = emf.createEntityManager();
+        EntityManager em = this.createEntityManager();
         EntityTransaction tx = em.getTransaction();
 
         String uuid = model.getUuid();
