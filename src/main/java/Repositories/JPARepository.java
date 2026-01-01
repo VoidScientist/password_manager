@@ -6,17 +6,17 @@ import jakarta.persistence.Persistence;
 
 public class JPARepository {
 
-    private final EntityManagerFactory emf;
+    private final EntityManager em;
 
-    public JPARepository(String pUnit) {
+    public JPARepository(EntityManager entityManager) {
 
-        this.emf = Persistence.createEntityManagerFactory(pUnit);
+        this.em = entityManager;
 
     }
 
-    public EntityManager createEntityManager() {
+    public EntityManager getEntityManager() {
 
-        return this.emf.createEntityManager();
+        return this.em;
 
     }
 
