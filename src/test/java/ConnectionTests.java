@@ -2,6 +2,9 @@ import Entities.UserProfile;
 import Utilities.Config;
 import Repositories.UserProfileRepository;
 import Utilities.Security.PasswordHasher;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.Persistence;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -18,7 +21,10 @@ public class ConnectionTests {
     @BeforeAll
     public static void init() throws NoSuchAlgorithmException, InvalidKeySpecException {
 
-        userRep = new UserProfileRepository(Config.getTestPersistenceUnit());
+        EntityManagerFactory emf = Persistence.createEntityManagerFactory(Config.getTestPersistenceUnit());
+        EntityManager em = emf.createEntityManager();
+
+        userRep = new UserProfileRepository(em);
 
         String hash = PasswordHasher.hashPassword(PASSWORD.toCharArray());
 
