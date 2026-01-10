@@ -3,11 +3,41 @@
              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
              xsi:schemaLocation="https://jakarta.ee/xml/ns/persistence https://jakarta.ee/xml/ns/persistence/persistence_3_2.xsd"
              version="3.2">
-    <persistence-unit name="default">
+
+    <persistence-unit name="secur2i">
+
+        <class>Entities.UserProfile</class>
+        <class>Entities.Profile</class>
+        <class>Entities.Category</class>
+
         <properties>
-
-            <property name="jakarta.persistence.jdbc.driver" value=""/>
-
+            <property name="jakarta.persistence.jdbc.driver" value="com.mysql.jdbc.Driver"/>
+            <property name="jakarta.persistence.jdbc.url" value="jdbc:mysql://localhost:3306/secur2i"/>
+            <property name="jakarta.persistence.jdbc.user" value="root"/>
+            <property name="jakarta.persistence.schema-generation.database.action" value="drop-and-create"/>
+            <property name="jakarta.persistence.schema-generation.scripts.action" value="drop-and-create"/>
+            <property name="jakarta.persistence.schema-generation.scripts.drop-target" value="drop-target.txt"/>
+            <property name="jakarta.persistence.schema-generation.scripts.create-target" value="create-target.txt"/>
         </properties>
+
     </persistence-unit>
+
+    <persistence-unit name="test_db">
+
+        <class>Entities.UserProfile</class>
+        <class>Entities.Profile</class>
+        <class>Entities.Category</class>
+
+        <properties>
+            <property name="jakarta.persistence.jdbc.driver" value="com.mysql.jdbc.Driver"/>
+            <property name="jakarta.persistence.jdbc.url" value="jdbc:mysql://localhost:3306/test_db"/>
+            <property name="jakarta.persistence.jdbc.user" value="root"/>
+            <property name="jakarta.persistence.schema-generation.database.action" value="drop-and-create"/>
+            <property name="jakarta.persistence.schema-generation.scripts.action" value="drop-and-create"/>
+            <property name="jakarta.persistence.schema-generation.scripts.drop-target" value="drop-target.txt"/>
+            <property name="jakarta.persistence.schema-generation.scripts.create-target" value="create-target.txt"/>
+        </properties>
+
+    </persistence-unit>
+
 </persistence>
