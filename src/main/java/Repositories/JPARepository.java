@@ -2,7 +2,7 @@ package Repositories;
 
 import jakarta.persistence.EntityManager;
 
-public class JPARepository {
+public class JPARepository<ModelType> {
 
     private final EntityManager em;
 
@@ -18,5 +18,28 @@ public class JPARepository {
 
     }
 
+    public ModelType save(ModelType model) {
+
+        EntityManager em = this.getEntityManager();
+
+        if (em.contains(model)) {
+            model = em.merge(model);
+        } else {
+            em.persist(model);
+        }
+
+        return model;
+
+    }
+
+    public void delete(ModelType model) {
+
+        EntityManager em = this.getEntityManager();
+
+        if (em.contains(model)) {
+            em.remove(model);
+        }
+
+    }
 
 }

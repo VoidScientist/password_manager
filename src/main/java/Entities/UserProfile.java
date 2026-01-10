@@ -22,10 +22,10 @@ public class UserProfile {
     @Column(name="PASSWORD_HASH")
     private String passwordHash;
 
-    @OneToMany(mappedBy="owner")
+    @OneToMany(mappedBy="owner", cascade={CascadeType.PERSIST, CascadeType.MERGE})
     private final Set<Profile> profiles = new HashSet<>();
 
-    @OneToMany(mappedBy="owner")
+    @OneToMany(mappedBy="owner",  cascade={CascadeType.PERSIST, CascadeType.MERGE})
     private final Set<Category> categories = new HashSet<>();
 
     public UserProfile(String username, String passwordHash) {

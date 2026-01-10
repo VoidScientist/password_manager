@@ -3,12 +3,11 @@ package Repositories;
 import Entities.Profile;
 import Repositories.Interface.ISecureRepository;
 import jakarta.persistence.EntityManager;
-import jakarta.persistence.EntityTransaction;
 import jakarta.persistence.NoResultException;
 
 import java.util.List;
 
-public class ProfileRepository extends JPARepository implements ISecureRepository<Profile, Integer> {
+public class ProfileRepository extends JPARepository<Profile> implements ISecureRepository<Profile, Integer> {
 
     public ProfileRepository(EntityManager entityManager) {
         super(entityManager);
@@ -35,55 +34,5 @@ public class ProfileRepository extends JPARepository implements ISecureRepositor
                 .getResultList();
     }
 
-    @Override
-    public Profile save(Profile model) {
-
-        EntityManager em = this.getEntityManager();
-        EntityTransaction tx = em.getTransaction();
-
-        try {
-
-            tx.begin();
-            model = em.merge(model);
-            tx.commit();
-
-            return model;
-
-        } catch (Exception e) {
-
-            if (tx.isActive()) tx.rollback();
-            throw e;
-
-        }
-
-    }
-
-    @Override
-    public void delete(Profile model) {
-
-        EntityManager em = this.getEntityManager();
-        EntityTransaction tx = em.getTransaction();
-
-        int id = model.getId();
-
-        try {
-
-            tx.begin();
-            Profile profile = em.find(Profile.class, id);
-
-            if (profile != null) {
-                em.remove(profile);
-            }
-
-            tx.commit();
-
-        } catch (Exception e) {
-
-            if (tx.isActive()) tx.rollback();
-            throw e;
-
-        }
-
-    }
 
 }
