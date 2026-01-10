@@ -2,7 +2,6 @@ package Repositories;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.TransactionRequiredException;
-import jakarta.transaction.Transactional;
 
 /**
  * Classe parent des {@code XXXXRepository}, contient un constructeur et des méthodes génériques pour {@code save()}
