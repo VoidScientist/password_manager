@@ -22,6 +22,9 @@ import java.security.NoSuchAlgorithmException;
  */
 public class UserService {
 
+    private final String ALLOWED_REGEX = "^[a-zA-Z0-9_]*$";
+    private final int MIN_USERNAME_LENGTH = 1;
+
     private final EntityManagerFactory emf;
     private final EntityManager em;
 
@@ -53,10 +56,12 @@ public class UserService {
         UserProfile attemptTarget = userRep.findByUsername(username);
 
         if (attemptTarget == null) {
-            throw new IllegalArgumentException("Username not found");
+            throw new IllegalArgumentException("Il n'existe pas d'utilisateurs avec ce nom d'utilisateur.");
         }
 
         String loginHash;
+
+        String correctHash = attemptTarget.getPasswordHash().split("\\$")[1];
         String b64Salt = attemptTarget.getPasswordHash().split("\\$")[0];
 
         try {
@@ -65,8 +70,8 @@ public class UserService {
             throw new Exception("Error hashing password");
         }
 
-        if (!loginHash.equals(attemptTarget.getPasswordHash()))
-            throw new IllegalArgumentException("Wrong password");
+        if (!loginHash.equals(correctHash))
+            throw new IllegalArgumentException("Mauvais mot de passe");
 
         return attemptTarget;
 
@@ -88,6 +93,12 @@ public class UserService {
         EntityTransaction tx = em.getTransaction();
         UserProfile attemptTarget;
 
+        if (!isUsernameValid(username)) {
+            throw new IllegalArgumentException(
+                    "Le nom d'utilisateur ne peut contenir que des chiffres et des lettres, ou un underscore (_)."
+            );
+        }
+
         try {
 
             tx.begin();
@@ -107,7 +118,7 @@ public class UserService {
             }
 
             if (e.getClass().equals(RollbackException.class)) {
-                throw new IllegalArgumentException("Username already exists");
+                throw new IllegalArgumentException("Ce nom d'utilisateur existe déjà!");
             }
 
             return null;
@@ -118,5 +129,14 @@ public class UserService {
 
     }
 
+
+    private boolean isUsernameValid(String username) {
+
+        boolean isValid = username.matches(ALLOWED_REGEX);
+        boolean hasEnoughCharacters = username.length() >= MIN_USERNAME_LENGTH;
+
+        return isValid && hasEnoughCharacters;
+
+    }
 
 }
