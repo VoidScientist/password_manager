@@ -2,6 +2,8 @@ package Entities;
 
 import jakarta.persistence.*;
 
+import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.Objects;
 
 /**
@@ -15,6 +17,9 @@ public class Profile {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
+
+    @Column(name="CREATED", nullable=false, updatable=false)
+    private LocalDateTime creationDate;
 
     @Column(name="SERVICE")
     private String service;
@@ -43,6 +48,11 @@ public class Profile {
         this.username = username;
         this.encrypted_password = encrypted_password;
         this.url = url;
+    }
+
+    @PrePersist
+    public void prePersist() {
+        this.creationDate = LocalDateTime.now();
     }
 
     public int getId() {
