@@ -7,6 +7,10 @@ import java.util.*;
 /**
  * La classe UserProfile est l'entité JPA concernant le mot de passe maître d'un utilisateur
  * pour accéder à ses mots de passe.
+ *
+ * @author ARCELON Louis, MARTEL Mathieu
+ * @version v0.1
+ *
  */
 @Entity
 public class UserProfile {
@@ -22,10 +26,10 @@ public class UserProfile {
     @Column(name="PASSWORD_HASH")
     private String passwordHash;
 
-    @OneToMany(mappedBy="owner", cascade={CascadeType.PERSIST, CascadeType.MERGE})
+    @OneToMany(mappedBy="owner", cascade={CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REMOVE})
     private final Set<Profile> profiles = new HashSet<>();
 
-    @OneToMany(mappedBy="owner",  cascade={CascadeType.PERSIST, CascadeType.MERGE})
+    @OneToMany(mappedBy="owner",  cascade={CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REMOVE})
     private final Set<Category> categories = new HashSet<>();
 
     public UserProfile(String username, String passwordHash) {
@@ -55,45 +59,53 @@ public class UserProfile {
         return categories;
     }
 
-    public boolean addCategory(Category category) {
+    public void addCategory(Category category) throws IllegalArgumentException {
 
         boolean success = this.categories.add(category);
         if (success) {
             category.setOwner(this);
-            category.getProfiles().forEach(this::addProfile);
+            for (Profile profile : category.getProfiles()) {
+                this.addProfile(profile);
+            }
+        } else {
+            throw new IllegalArgumentException("Failed to insert category");
         }
-        return success;
 
     }
 
-    public boolean removeCategory(Category category) {
+    public void removeCategory(Category category) throws IllegalArgumentException {
 
         boolean success = this.categories.remove(category);
         if (success) {
             category.setOwner(null);
-            category.getProfiles().forEach(this::removeProfile);
+            for (Profile profile : category.getProfiles()) {
+                category.removeProfile(profile);
+            }
+        } else {
+            throw new IllegalArgumentException("No such category in user categories");
         }
-        return success;
 
     }
 
-    public boolean addProfile(Profile profile) {
+    public void addProfile(Profile profile) throws IllegalArgumentException {
 
         boolean success = this.profiles.add(profile);
         if (success) {
             profile.setOwner(this);
+        } else  {
+            throw new IllegalArgumentException("Failed to add profile");
         }
-        return success;
 
     }
 
-    public boolean removeProfile(Profile profile) {
+    public void removeProfile(Profile profile) throws IllegalArgumentException {
 
         boolean success = this.profiles.remove(profile);
         if (success) {
             profile.setOwner(null);
+        } else   {
+            throw new IllegalArgumentException("No such profile in user profiles");
         }
-        return success;
 
     }
 
