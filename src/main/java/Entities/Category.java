@@ -67,7 +67,7 @@ public class Category {
         this.owner = owner;
     }
 
-    public boolean addProfile(Profile profile) {
+    public void addProfile(Profile profile) throws IllegalArgumentException {
 
         boolean success = this.profiles.add(profile);
         if (success) {
@@ -76,18 +76,20 @@ public class Category {
             if (this.owner != null) {
                 this.owner.addProfile(profile);
             }
+        } else {
+            throw new IllegalArgumentException("Failed to add profile");
         }
-        return success;
 
     }
 
-    public boolean removeProfile(Profile profile) {
+    public void removeProfile(Profile profile) throws IllegalArgumentException {
 
          boolean success = this.profiles.remove(profile);
          if (success) {
              profile.setCategory(null);
+         } else {
+             throw new IllegalArgumentException("Failed to remove profile");
          }
-         return success;
 
     }
 
