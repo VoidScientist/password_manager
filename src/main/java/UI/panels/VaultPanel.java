@@ -1,12 +1,11 @@
 package UI.panels;
 
-import Utilities.Security.Password.*;
-
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.util.ArrayList;
 import java.util.List;
+import Utilities.Security.Password.*;
 
 public class VaultPanel extends JPanel {
 
@@ -204,31 +203,18 @@ public class VaultPanel extends JPanel {
         ImageIcon eyeOpenIcon = loadIcon(EYE_OPEN_PATH, 20, 20);
         ImageIcon eyeClosedIcon = loadIcon(EYE_CLOSED_PATH, 20, 20);
 
-        // Par défaut, mot de passe masqué, donc icône œil fermé
-        if (eyeClosedIcon != null) {
-            eyeButton.setIcon(eyeClosedIcon);
-        } else {
-            eyeButton.setText("👁");
-            eyeButton.setFont(new Font("Arial", Font.PLAIN, 14));
-        }
+        // Utiliser directement les images (par défaut, mot de passe masqué = icône œil fermé)
+        eyeButton.setIcon(eyeClosedIcon);
 
         eyeButton.addActionListener(e -> {
-            if (eyeButton.getIcon() == eyeClosedIcon || (eyeButton.getIcon() == null && eyeButton.getText().equals("👁"))) {
+            if (eyeButton.getIcon() == eyeClosedIcon) {
                 // Actuellement masqué, on affiche
                 passwordLabel.setText(account.realPassword != null ? account.realPassword : account.maskedPassword);
-                if (eyeOpenIcon != null) {
-                    eyeButton.setIcon(eyeOpenIcon);
-                } else {
-                    eyeButton.setText("🙈");
-                }
+                eyeButton.setIcon(eyeOpenIcon);
             } else {
                 // Actuellement visible, on masque
                 passwordLabel.setText("••••••");
-                if (eyeClosedIcon != null) {
-                    eyeButton.setIcon(eyeClosedIcon);
-                } else {
-                    eyeButton.setText("👁");
-                }
+                eyeButton.setIcon(eyeClosedIcon);
             }
         });
 
@@ -620,31 +606,18 @@ public class VaultPanel extends JPanel {
         ImageIcon eyeOpenIcon = loadIcon(EYE_OPEN_PATH, 20, 20);
         ImageIcon eyeClosedIcon = loadIcon(EYE_CLOSED_PATH, 20, 20);
 
-        // Par défaut, mot de passe masqué, donc icône œil fermé
-        if (eyeClosedIcon != null) {
-            eyeButton.setIcon(eyeClosedIcon);
-        } else {
-            eyeButton.setText("👁");
-            eyeButton.setFont(new Font("Arial", Font.PLAIN, 14));
-        }
+        // Utiliser directement les images (par défaut, mot de passe masqué = icône œil fermé)
+        eyeButton.setIcon(eyeClosedIcon);
 
         eyeButton.addActionListener(e -> {
             if (passwordField.getEchoChar() == (char) 0) {
                 // Masquer le mot de passe
                 passwordField.setEchoChar('•');
-                if (eyeClosedIcon != null) {
-                    eyeButton.setIcon(eyeClosedIcon);
-                } else {
-                    eyeButton.setText("👁");
-                }
+                eyeButton.setIcon(eyeClosedIcon);
             } else {
                 // Afficher le mot de passe
                 passwordField.setEchoChar((char) 0);
-                if (eyeOpenIcon != null) {
-                    eyeButton.setIcon(eyeOpenIcon);
-                } else {
-                    eyeButton.setText("🙈");
-                }
+                eyeButton.setIcon(eyeOpenIcon);
             }
         });
         passwordPanel.add(eyeButton, BorderLayout.EAST);

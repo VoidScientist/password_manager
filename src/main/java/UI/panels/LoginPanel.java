@@ -1,7 +1,6 @@
 package UI.panels;
 
 import UI.MainFrame;
-import Utilities.Config;
 
 import javax.swing.*;
 import java.awt.*;
@@ -14,12 +13,13 @@ public class LoginPanel extends JPanel {
 
     private JTextField usernameField;
     private JPasswordField passwordField;
+    private JLabel errorLabel;
     private MainFrame mainFrame;
 
     // Chemins des images
-    private static final String ILLUSTRATION_PATH = "/images/logo.png";
-    private static final String EYE_OPEN_PATH = "/images/eye-open.png";
-    private static final String EYE_CLOSED_PATH = "/images/eye-closed.png";
+    private static final String ILLUSTRATION_PATH = "/ressource/images/logo.png";
+    private static final String EYE_OPEN_PATH = "/ressource/images/eye-open.png";
+    private static final String EYE_CLOSED_PATH = "/ressource/images/eye-closed.png";
 
     public LoginPanel(MainFrame mainFrame) {
         this.mainFrame = mainFrame;
@@ -148,11 +148,20 @@ public class LoginPanel extends JPanel {
         gbc.insets = new Insets(0, 40, 30, 40);
         panel.add(passwordPanel, gbc);
 
+        // Label d'erreur (caché par défaut)
+        errorLabel = new JLabel(" ");
+        errorLabel.setFont(new Font("Arial", Font.PLAIN, 13));
+        errorLabel.setForeground(new Color(244, 67, 54)); // Rouge
+        errorLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        gbc.gridy = 5;
+        gbc.insets = new Insets(0, 40, 10, 40);
+        panel.add(errorLabel, gbc);
+
         // Bouton SE CONNECTER
         JButton loginButton = createStyledButton("SE CONNECTER", BUTTON_COLOR);
         loginButton.setPreferredSize(new Dimension(300, 45));
         loginButton.addActionListener(e -> handleLogin());
-        gbc.gridy = 5;
+        gbc.gridy = 6;
         gbc.insets = new Insets(10, 40, 20, 40);
         panel.add(loginButton, gbc);
 
@@ -160,7 +169,7 @@ public class LoginPanel extends JPanel {
         JLabel orLabel = new JLabel("OU", SwingConstants.CENTER);
         orLabel.setFont(new Font("Arial", Font.PLAIN, 14));
         orLabel.setForeground(Color.GRAY);
-        gbc.gridy = 6;
+        gbc.gridy = 7;
         gbc.insets = new Insets(20, 40, 20, 40);
         panel.add(orLabel, gbc);
 
@@ -168,7 +177,7 @@ public class LoginPanel extends JPanel {
         JButton createAccountButton = createOutlineButton("Créer un compte");
         createAccountButton.setPreferredSize(new Dimension(300, 45));
         createAccountButton.addActionListener(e -> handleCreateAccount());
-        gbc.gridy = 7;
+        gbc.gridy = 8;
         gbc.insets = new Insets(10, 40, 40, 40);
         panel.add(createAccountButton, gbc);
 
@@ -186,27 +195,18 @@ public class LoginPanel extends JPanel {
         ImageIcon eyeOpenIcon = loadIcon(EYE_OPEN_PATH, 20, 20);
         ImageIcon eyeClosedIcon = loadIcon(EYE_CLOSED_PATH, 20, 20);
 
-        // Si les images n'existent pas, utiliser des emojis
-        if (eyeClosedIcon == null) {
-            button.setText("👁");
-            button.setFont(new Font("Arial", Font.PLAIN, 16));
-        } else {
-            button.setIcon(eyeClosedIcon);
-        }
+        // Utiliser directement les images
+        button.setIcon(eyeClosedIcon);
 
         button.addActionListener(e -> {
             if (passwordField.getEchoChar() == (char) 0) {
                 // Masquer le mot de passe
                 passwordField.setEchoChar('•');
-                if (eyeClosedIcon != null) {
-                    button.setIcon(eyeClosedIcon);
-                }
+                button.setIcon(eyeClosedIcon);
             } else {
                 // Afficher le mot de passe
                 passwordField.setEchoChar((char) 0);
-                if (eyeOpenIcon != null) {
-                    button.setIcon(eyeOpenIcon);
-                }
+                button.setIcon(eyeOpenIcon);
             }
         });
 
@@ -290,25 +290,23 @@ public class LoginPanel extends JPanel {
         String username = usernameField.getText();
         String password = new String(passwordField.getPassword());
 
+        // Réinitialiser le message d'erreur
+        errorLabel.setText(" ");
+
         if (username.isEmpty() || password.isEmpty()) {
-            JOptionPane.showMessageDialog(this,
-                    "Veuillez remplir tous les champs",
-                    "Erreur",
-                    JOptionPane.ERROR_MESSAGE);
+            errorLabel.setText("Veuillez remplir tous les champs");
             return;
         }
 
         // TODO: Vérifier les credentials avec le backend
         System.out.println("Connexion avec: " + username);
 
-        // Connexion réussie - afficher le menu et aller aux pages principales
+        // Connexion réussie
         mainFrame.onLoginSuccess();
     }
 
     private void handleCreateAccount() {
-        JOptionPane.showMessageDialog(this,
-                "Fenêtre de création de compte à implémenter",
-                "Info",
-                JOptionPane.INFORMATION_MESSAGE);
+        errorLabel.setText(" ");
+        mainFrame.showPage("register");
     }
 }
