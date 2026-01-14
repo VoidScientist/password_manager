@@ -1,3 +1,4 @@
+import Services.SessionManager;
 import Services.UserService;
 import Utilities.Config;
 import jakarta.persistence.EntityManagerFactory;
@@ -21,6 +22,7 @@ public class UserServiceTests {
         userService = new UserService(emf);
 
         userService.register(USERNAME_LOGIN_TEST, PASSWORD_LOGIN_TEST.clone());
+        SessionManager.disconnect();
 
     }
 
@@ -28,6 +30,7 @@ public class UserServiceTests {
     public void registerTest() throws Exception {
 
         userService.register("TestUser987", "password".toCharArray());
+        SessionManager.disconnect();
 
     }
 
@@ -38,8 +41,9 @@ public class UserServiceTests {
 
         try {
             userService.register("Dupli_kate", "password".toCharArray());
-
+            SessionManager.disconnect();
             userService.register("Dupli_kate", "password".toCharArray());
+            SessionManager.disconnect();
         } catch (IllegalArgumentException e) {
             System.out.println(e.getMessage());
             flag = true;
@@ -54,6 +58,7 @@ public class UserServiceTests {
     public void loginCorrectPasswordTest() throws Exception {
 
         userService.login(USERNAME_LOGIN_TEST, PASSWORD_LOGIN_TEST.clone());
+        SessionManager.disconnect();
 
     }
 
@@ -64,11 +69,13 @@ public class UserServiceTests {
 
         try {
             userService.login(USERNAME_LOGIN_TEST, "ahahahnotrightpasswordamhacker".toCharArray());
+            SessionManager.disconnect();
         } catch (IllegalArgumentException e) {
             System.out.println(e.getMessage());
             flag = true;
         }
 
+        SessionManager.disconnect();
         assert flag;
 
     }
@@ -80,11 +87,13 @@ public class UserServiceTests {
 
         try {
             userService.login("hiidontexist", PASSWORD_LOGIN_TEST.clone());
+            SessionManager.disconnect();
         } catch (IllegalArgumentException e) {
             System.out.println(e.getMessage());
             flag = true;
         }
 
+        SessionManager.disconnect();
         assert flag;
 
     }
@@ -96,11 +105,13 @@ public class UserServiceTests {
 
         try {
             userService.register("SELECT * FROM userprofile;", PASSWORD_LOGIN_TEST.clone());
+            SessionManager.disconnect();
         } catch (IllegalArgumentException e) {
             System.out.println(e.getMessage());
             flag = true;
         }
 
+        SessionManager.disconnect();
         assert flag;
 
     }
