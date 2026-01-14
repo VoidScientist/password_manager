@@ -17,9 +17,9 @@ public class LoginPanel extends JPanel {
     private MainFrame mainFrame;
 
     // Chemins des images
-    private static final String ILLUSTRATION_PATH = "/ressource/images/logo.png";
-    private static final String EYE_OPEN_PATH = "/ressource/images/eye-open.png";
-    private static final String EYE_CLOSED_PATH = "/ressource/images/eye-closed.png";
+    private static final String ILLUSTRATION_PATH = "/resources/images/logo.png";
+    private static final String EYE_OPEN_PATH = "/resources/images/eye-open.png";
+    private static final String EYE_CLOSED_PATH = "/resources/images/eye-closed.png";
 
     public LoginPanel(MainFrame mainFrame) {
         this.mainFrame = mainFrame;
