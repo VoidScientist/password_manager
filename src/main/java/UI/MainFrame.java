@@ -1,9 +1,6 @@
 package UI;
 
-import UI.panels.LoginPanel;
-import UI.panels.PasswordGeneratorPanel;
-import UI.panels.SideMenu;
-import UI.panels.VaultPanel;
+import UI.panels.*;
 
 import javax.swing.*;
 import java.awt.*;
@@ -42,6 +39,7 @@ public class MainFrame extends JFrame {
         contentPanel.add(new SecurityPanel(), "security");
         contentPanel.add(new PasswordGeneratorPanel(), "generator");
         contentPanel.add(new VaultPanel(), "vault");
+        contentPanel.add(new SecurityScorePanel(), "securityscore");
         contentPanel.add(new ProfilePanel(), "profile");
 
         mainContainer.add(contentPanel, BorderLayout.CENTER);
@@ -61,6 +59,22 @@ public class MainFrame extends JFrame {
 
         // Aller à la première page avec menu
         showPage("vault");
+
+        // Rafraîchir l'affichage
+        mainContainer.revalidate();
+        mainContainer.repaint();
+    }
+
+    // Méthode appelée lors de la déconnexion
+    public void onLogout() {
+        isLoggedIn = false;
+
+        // Retirer et cacher le menu latéral
+        sideMenu.setVisible(false);
+        mainContainer.remove(sideMenu);
+
+        // Retourner à la page de login
+        showPage("login");
 
         // Rafraîchir l'affichage
         mainContainer.revalidate();

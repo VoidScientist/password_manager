@@ -1,16 +1,21 @@
 package UI.panels;
 
+import Utilities.Security.Password.*;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.util.ArrayList;
 import java.util.List;
-import Utilities.Security.Password.*;
 
 public class VaultPanel extends JPanel {
 
     private static final Color PURPLE_BG = new Color(88, 70, 150);
     private static final Color LIGHT_GRAY = new Color(240, 240, 240);
+
+    // Chemins des images pour le bouton œil
+    private static final String EYE_OPEN_PATH = "/ressource/images/eye-open.png";
+    private static final String EYE_CLOSED_PATH = "/ressource/images/eye-closed.png";
 
     private JPanel accountListPanel;
     private JPanel detailPanel;
@@ -30,8 +35,15 @@ public class VaultPanel extends JPanel {
         // Charger le dictionnaire des mots de passe faibles
         WeakPasswordDictionary.load();
 
+        // Créer un wrapper pour mainPanel et le bouton +
+        JPanel wrapperPanel = new JPanel(new BorderLayout());
+        wrapperPanel.setBackground(Color.WHITE);
+
         JPanel mainPanel = createMainPanel();
-        add(mainPanel, BorderLayout.CENTER);
+        wrapperPanel.add(mainPanel, BorderLayout.CENTER);
+        wrapperPanel.add(createAddButton(), BorderLayout.SOUTH);
+
+        add(wrapperPanel, BorderLayout.CENTER);
 
         detailPanel = new JPanel();
         detailCardLayout = new CardLayout();
@@ -64,6 +76,7 @@ public class VaultPanel extends JPanel {
         JScrollPane scrollPane = new JScrollPane(accountListPanel);
         scrollPane.setBorder(BorderFactory.createEmptyBorder());
         scrollPane.getVerticalScrollBar().setUnitIncrement(16);
+        scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
         panel.add(scrollPane, BorderLayout.CENTER);
 
         return panel;
@@ -114,11 +127,11 @@ public class VaultPanel extends JPanel {
     private void loadAccounts() {
         accounts = new ArrayList<>();
         accounts.add(new Account("Instagram", "jean.jean@gmail.com", "jean.j", "••••••",
-                "instagram_icon.png", "Réseaux Sociaux", 4));
+                "motdepasse123", "instagram_icon.png", "Réseaux Sociaux", 4));
         accounts.add(new Account("Facebook", "jean.jean@gmail.com", "jean.jean", "••••••",
-                "facebook_icon.png", "Réseaux Sociaux", 3));
+                "facebook2024", "facebook_icon.png", "Réseaux Sociaux", 3));
         accounts.add(new Account("Gmail", "jean.jean@gmail.com", "jean.jean", "••••••",
-                "gmail_icon.png", "Email", 5));
+                "gmail@secure", "gmail_icon.png", "Email", 5));
     }
 
     private void displayAccounts() {
@@ -180,12 +193,44 @@ public class VaultPanel extends JPanel {
         JLabel passwordLabel = new JLabel(account.maskedPassword);
         passwordLabel.setFont(new Font("Arial", Font.BOLD, 14));
 
-        JButton eyeButton = new JButton("👁");
-        eyeButton.setFont(new Font("Arial", Font.PLAIN, 14));
-        eyeButton.setBorderPainted(false);
-        eyeButton.setContentAreaFilled(false);
+        JButton eyeButton = new JButton();
+        eyeButton.setBorder(BorderFactory.createEmptyBorder());
+        eyeButton.setBackground(Color.WHITE);
         eyeButton.setFocusPainted(false);
+        eyeButton.setContentAreaFilled(false);
         eyeButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
+
+        // Charger les images
+        ImageIcon eyeOpenIcon = loadIcon(EYE_OPEN_PATH, 20, 20);
+        ImageIcon eyeClosedIcon = loadIcon(EYE_CLOSED_PATH, 20, 20);
+
+        // Par défaut, mot de passe masqué, donc icône œil fermé
+        if (eyeClosedIcon != null) {
+            eyeButton.setIcon(eyeClosedIcon);
+        } else {
+            eyeButton.setText("👁");
+            eyeButton.setFont(new Font("Arial", Font.PLAIN, 14));
+        }
+
+        eyeButton.addActionListener(e -> {
+            if (eyeButton.getIcon() == eyeClosedIcon || (eyeButton.getIcon() == null && eyeButton.getText().equals("👁"))) {
+                // Actuellement masqué, on affiche
+                passwordLabel.setText(account.realPassword != null ? account.realPassword : account.maskedPassword);
+                if (eyeOpenIcon != null) {
+                    eyeButton.setIcon(eyeOpenIcon);
+                } else {
+                    eyeButton.setText("🙈");
+                }
+            } else {
+                // Actuellement visible, on masque
+                passwordLabel.setText("••••••");
+                if (eyeClosedIcon != null) {
+                    eyeButton.setIcon(eyeClosedIcon);
+                } else {
+                    eyeButton.setText("👁");
+                }
+            }
+        });
 
         credentialsPanel.add(loginLabel);
         credentialsPanel.add(passwordLabel);
@@ -216,6 +261,59 @@ public class VaultPanel extends JPanel {
         return card;
     }
 
+    private JPanel createAddButton() {
+        JPanel buttonContainer = new JPanel();
+        buttonContainer.setLayout(new FlowLayout(FlowLayout.RIGHT, 20, 20));
+        buttonContainer.setBackground(Color.WHITE);
+
+        JButton addButton = new JButton("+") {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2d = (Graphics2D) g.create();
+                g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+                if (getModel().isPressed()) {
+                    g2d.setColor(PURPLE_BG.darker());
+                } else if (getModel().isRollover()) {
+                    g2d.setColor(PURPLE_BG.brighter());
+                } else {
+                    g2d.setColor(PURPLE_BG);
+                }
+                g2d.fillOval(0, 0, getWidth() - 1, getHeight() - 1);
+                g2d.dispose();
+
+                super.paintComponent(g);
+            }
+        };
+
+        addButton.setPreferredSize(new Dimension(50, 50));
+        addButton.setFont(new Font("Arial", Font.BOLD, 24));
+        addButton.setForeground(Color.WHITE);
+        addButton.setFocusPainted(false);
+        addButton.setBorderPainted(false);
+        addButton.setContentAreaFilled(false);
+        addButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        addButton.setToolTipText("Ajouter un nouveau compte");
+
+        addButton.addActionListener(e -> showNewAccountPanel());
+
+        buttonContainer.add(addButton);
+        return buttonContainer;
+    }
+
+    private void showNewAccountPanel() {
+        String panelName = "new_account";
+        Account emptyAccount = new Account("Nouveau compte", "", "", "", "", "", "Autre", 0);
+        JPanel newAccountPanel = createDetailsPanel(emptyAccount);
+        detailPanel.add(newAccountPanel, panelName);
+
+        detailPanel.setVisible(true);
+        detailCardLayout.show(detailPanel, panelName);
+
+        revalidate();
+        repaint();
+    }
+
     private void showAccountDetails(Account account) {
         String panelName = "details_" + account.serviceName;
 
@@ -233,7 +331,7 @@ public class VaultPanel extends JPanel {
         JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
         panel.setBackground(LIGHT_GRAY);
-        panel.setBorder(BorderFactory.createEmptyBorder(15, 25, 15, 25));
+        panel.setBorder(BorderFactory.createEmptyBorder(5, 25, 15, 25));
 
         JPanel headerPanel = new JPanel(new BorderLayout());
         headerPanel.setBackground(LIGHT_GRAY);
@@ -253,7 +351,7 @@ public class VaultPanel extends JPanel {
         headerPanel.add(closeButton, BorderLayout.EAST);
 
         panel.add(headerPanel);
-        panel.add(Box.createRigidArea(new Dimension(0, 10)));
+        panel.add(Box.createRigidArea(new Dimension(0, 5)));
 
         JLabel serviceIcon = new JLabel();
         serviceIcon.setPreferredSize(new Dimension(80, 80));
@@ -270,38 +368,33 @@ public class VaultPanel extends JPanel {
         panel.add(serviceIcon);
         panel.add(Box.createRigidArea(new Dimension(0, 12)));
 
-        JLabel serviceName = new JLabel(account.serviceName);
-        serviceName.setFont(new Font("Arial", Font.BOLD, 22));
+        JLabel serviceName = createEditableLabel(account.serviceName, 22, true);
         serviceName.setAlignmentX(Component.CENTER_ALIGNMENT);
         panel.add(serviceName);
-        panel.add(Box.createRigidArea(new Dimension(0, 5)));
-
-        JLabel serviceEmail = new JLabel(account.email);
-        serviceEmail.setFont(new Font("Arial", Font.PLAIN, 12));
-        serviceEmail.setForeground(Color.GRAY);
-        serviceEmail.setAlignmentX(Component.CENTER_ALIGNMENT);
-        panel.add(serviceEmail);
         panel.add(Box.createRigidArea(new Dimension(0, 25)));
 
         panel.add(createDetailField("Login", account.login));
         panel.add(Box.createRigidArea(new Dimension(0, 12)));
 
+        panel.add(createDetailField("Email", account.email));
+        panel.add(Box.createRigidArea(new Dimension(0, 12)));
+
         JPanel strengthPanel = createStrengthBar(0);
         strengthPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        panel.add(createDetailPasswordFieldWithStrengthUpdate("Mot de passe", "motdepassedejean", strengthPanel));
+        String initialPassword = account.email.isEmpty() ? "" : "motdepassedejean";
+        panel.add(createDetailPasswordFieldWithStrengthUpdate("Mot de passe", initialPassword, strengthPanel));
+        panel.add(Box.createRigidArea(new Dimension(0, 8)));
+
+        panel.add(strengthPanel);
         panel.add(Box.createRigidArea(new Dimension(0, 12)));
 
-        panel.add(createDetailField("URL", "https://www.facebook.com/?locale=fr_FR"));
-        panel.add(Box.createRigidArea(new Dimension(0, 18)));
+        String urlValue = account.email.isEmpty() ? "" : "https://www.facebook.com/?locale=fr_FR";
+        panel.add(createDetailField("URL", urlValue));
+        panel.add(Box.createRigidArea(new Dimension(0, 12)));
 
-        JLabel robustLabel = new JLabel("Robustesse");
-        robustLabel.setFont(new Font("Arial", Font.PLAIN, 12));
-        robustLabel.setForeground(Color.GRAY);
-        robustLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-        panel.add(robustLabel);
-        panel.add(Box.createRigidArea(new Dimension(0, 6)));
-        panel.add(strengthPanel);
+        panel.add(createCategoryField("Catégorie", account.category));
+        panel.add(Box.createRigidArea(new Dimension(0, 12)));
 
         panel.add(Box.createVerticalGlue());
 
@@ -324,6 +417,103 @@ public class VaultPanel extends JPanel {
         buttonPanel.add(saveButton);
         buttonPanel.add(cancelButton);
         panel.add(buttonPanel);
+
+        return panel;
+    }
+
+    private JLabel createEditableLabel(String text, int fontSize, boolean bold) {
+        JLabel label = new JLabel(text);
+        label.setFont(new Font("Arial", bold ? Font.BOLD : Font.PLAIN, fontSize));
+        label.setCursor(new Cursor(Cursor.TEXT_CURSOR));
+
+        label.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                Container parent = label.getParent();
+                int index = getComponentIndex(parent, label);
+
+                JTextField textField = new JTextField(label.getText());
+                textField.setFont(label.getFont());
+                textField.setHorizontalAlignment(JTextField.CENTER);
+                textField.setMaximumSize(new Dimension(Integer.MAX_VALUE, 35));
+                textField.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+                parent.remove(label);
+                parent.add(textField, index);
+                parent.revalidate();
+                parent.repaint();
+
+                textField.requestFocus();
+                textField.selectAll();
+
+                textField.addActionListener(ae -> {
+                    label.setText(textField.getText());
+                    parent.remove(textField);
+                    parent.add(label, index);
+                    parent.revalidate();
+                    parent.repaint();
+                });
+
+                textField.addKeyListener(new KeyAdapter() {
+                    @Override
+                    public void keyPressed(KeyEvent ke) {
+                        if (ke.getKeyCode() == KeyEvent.VK_ESCAPE) {
+                            parent.remove(textField);
+                            parent.add(label, index);
+                            parent.revalidate();
+                            parent.repaint();
+                        }
+                    }
+                });
+
+                textField.addFocusListener(new FocusAdapter() {
+                    @Override
+                    public void focusLost(FocusEvent fe) {
+                        label.setText(textField.getText());
+                        parent.remove(textField);
+                        parent.add(label, index);
+                        parent.revalidate();
+                        parent.repaint();
+                    }
+                });
+            }
+        });
+
+        return label;
+    }
+
+    private int getComponentIndex(Container parent, Component component) {
+        Component[] components = parent.getComponents();
+        for (int i = 0; i < components.length; i++) {
+            if (components[i] == component) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    private JPanel createCategoryField(String label, String selectedCategory) {
+        JPanel panel = new JPanel();
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+        panel.setBackground(LIGHT_GRAY);
+        panel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 60));
+        panel.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        JLabel fieldLabel = new JLabel(label);
+        fieldLabel.setFont(new Font("Arial", Font.PLAIN, 12));
+        fieldLabel.setForeground(Color.GRAY);
+        fieldLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        String[] categories = {"Réseaux Sociaux", "Banking", "Email", "Shopping", "Travail", "Autre"};
+        JComboBox<String> categoryCombo = new JComboBox<>(categories);
+        categoryCombo.setSelectedItem(selectedCategory);
+        categoryCombo.setMaximumSize(new Dimension(Integer.MAX_VALUE, 35));
+        categoryCombo.setBackground(Color.WHITE);
+        categoryCombo.setFont(new Font("Arial", Font.PLAIN, 13));
+
+        panel.add(fieldLabel);
+        panel.add(Box.createRigidArea(new Dimension(0, 5)));
+        panel.add(categoryCombo);
 
         return panel;
     }
@@ -419,19 +609,42 @@ public class VaultPanel extends JPanel {
 
         passwordPanel.add(passwordField, BorderLayout.CENTER);
 
-        JButton eyeButton = new JButton("👁");
-        eyeButton.setFont(new Font("Arial", Font.PLAIN, 14));
-        eyeButton.setBorderPainted(false);
-        eyeButton.setContentAreaFilled(false);
+        JButton eyeButton = new JButton();
+        eyeButton.setBorder(BorderFactory.createEmptyBorder());
+        eyeButton.setBackground(Color.WHITE);
         eyeButton.setFocusPainted(false);
+        eyeButton.setContentAreaFilled(false);
         eyeButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
+
+        // Charger les images
+        ImageIcon eyeOpenIcon = loadIcon(EYE_OPEN_PATH, 20, 20);
+        ImageIcon eyeClosedIcon = loadIcon(EYE_CLOSED_PATH, 20, 20);
+
+        // Par défaut, mot de passe masqué, donc icône œil fermé
+        if (eyeClosedIcon != null) {
+            eyeButton.setIcon(eyeClosedIcon);
+        } else {
+            eyeButton.setText("👁");
+            eyeButton.setFont(new Font("Arial", Font.PLAIN, 14));
+        }
+
         eyeButton.addActionListener(e -> {
             if (passwordField.getEchoChar() == (char) 0) {
+                // Masquer le mot de passe
                 passwordField.setEchoChar('•');
-                eyeButton.setText("👁");
+                if (eyeClosedIcon != null) {
+                    eyeButton.setIcon(eyeClosedIcon);
+                } else {
+                    eyeButton.setText("👁");
+                }
             } else {
+                // Afficher le mot de passe
                 passwordField.setEchoChar((char) 0);
-                eyeButton.setText("🙈");
+                if (eyeOpenIcon != null) {
+                    eyeButton.setIcon(eyeOpenIcon);
+                } else {
+                    eyeButton.setText("🙈");
+                }
             }
         });
         passwordPanel.add(eyeButton, BorderLayout.EAST);
@@ -516,11 +729,23 @@ public class VaultPanel extends JPanel {
         }
     }
 
+    private ImageIcon loadIcon(String path, int width, int height) {
+        try {
+            ImageIcon icon = new ImageIcon(getClass().getResource(path));
+            Image img = icon.getImage().getScaledInstance(width, height, Image.SCALE_SMOOTH);
+            return new ImageIcon(img);
+        } catch (Exception e) {
+            System.err.println("Impossible de charger l'image: " + path);
+            return null;
+        }
+    }
+
     private static class Account {
         String serviceName;
         String email;
         String login;
         String maskedPassword;
+        String realPassword;
         String iconPath;
         String category;
         int strength;
@@ -531,6 +756,18 @@ public class VaultPanel extends JPanel {
             this.email = email;
             this.login = login;
             this.maskedPassword = maskedPassword;
+            this.iconPath = iconPath;
+            this.category = category;
+            this.strength = strength;
+        }
+
+        public Account(String serviceName, String email, String login, String maskedPassword,
+                       String realPassword, String iconPath, String category, int strength) {
+            this.serviceName = serviceName;
+            this.email = email;
+            this.login = login;
+            this.maskedPassword = maskedPassword;
+            this.realPassword = realPassword;
             this.iconPath = iconPath;
             this.category = category;
             this.strength = strength;

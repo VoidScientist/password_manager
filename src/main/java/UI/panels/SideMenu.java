@@ -39,13 +39,25 @@ public class SideMenu extends JPanel {
         // Boutons du menu
         addMenuButton("Mots de passe", "vault");
         addMenuButton("Sécurité", "security");
-        addMenuButton("Score de sécurité", "security");
+        addMenuButton("Score de sécurité", "securityscore");
         addMenuButton("Générateur", "generator");
         addMenuButton("Gestion des comptes", "accounts");
         addMenuButton("Profil", "profile");
 
         // Espace flexible en bas
         add(Box.createVerticalGlue());
+
+        // Séparateur avant le bouton déconnexion
+        JSeparator bottomSeparator = new JSeparator();
+        bottomSeparator.setForeground(new Color(255, 255, 255, 100));
+        bottomSeparator.setMaximumSize(new Dimension(200, 1));
+        add(bottomSeparator);
+        add(Box.createRigidArea(new Dimension(0, 15)));
+
+        // Bouton Déconnexion
+        JButton logoutButton = createLogoutButton();
+        add(logoutButton);
+        add(Box.createRigidArea(new Dimension(0, 20)));
     }
 
     private void addMenuButton(String text, String pageName) {
@@ -94,5 +106,59 @@ public class SideMenu extends JPanel {
 
         add(button);
         add(Box.createRigidArea(new Dimension(0, 5)));
+    }
+
+    private JButton createLogoutButton() {
+        JButton button = new JButton("Déconnexion") {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2d = (Graphics2D) g.create();
+                g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+                // Fond au hover
+                if (getModel().isRollover()) {
+                    g2d.setColor(new Color(255, 255, 255, 20));
+                    g2d.fillRoundRect(0, 0, getWidth(), getHeight(), 20, 20);
+                } else if (getModel().isPressed()) {
+                    g2d.setColor(new Color(255, 255, 255, 30));
+                    g2d.fillRoundRect(0, 0, getWidth(), getHeight(), 20, 20);
+                }
+
+                // Bordure blanche
+                g2d.setColor(Color.WHITE);
+                g2d.setStroke(new BasicStroke(2));
+                g2d.drawRoundRect(1, 1, getWidth() - 3, getHeight() - 3, 20, 20);
+                g2d.dispose();
+
+                super.paintComponent(g);
+            }
+        };
+
+        button.setAlignmentX(Component.CENTER_ALIGNMENT);
+        button.setMaximumSize(new Dimension(200, 40));
+        button.setPreferredSize(new Dimension(200, 40));
+        button.setFont(new Font("Arial", Font.BOLD, 14));
+        button.setForeground(Color.WHITE);
+        button.setFocusPainted(false);
+        button.setBorderPainted(false);
+        button.setContentAreaFilled(false);
+        button.setHorizontalAlignment(SwingConstants.CENTER);
+        button.setCursor(new Cursor(Cursor.HAND_CURSOR));
+
+        button.addActionListener(e -> {
+            int confirm = JOptionPane.showConfirmDialog(
+                    this,
+                    "Êtes-vous sûr de vouloir vous déconnecter ?",
+                    "Confirmation",
+                    JOptionPane.YES_NO_OPTION,
+                    JOptionPane.QUESTION_MESSAGE
+            );
+
+            if (confirm == JOptionPane.YES_OPTION) {
+                mainFrame.onLogout();
+            }
+        });
+
+        return button;
     }
 }
