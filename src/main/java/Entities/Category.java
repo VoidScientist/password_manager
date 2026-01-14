@@ -6,6 +6,10 @@ import java.util.*;
 
 /**
  * La classe Category est l'entité JPA contenant les infos liées aux catégories.
+ *
+ * @author ARCELON Louis, MARTEL Mathieu
+ * @version v0.1
+ *
  */
 @Entity
 public class Category {
