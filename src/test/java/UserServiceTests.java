@@ -1,4 +1,4 @@
-import Services.SessionManager;
+import Managers.SessionManager;
 import Services.UserService;
 import Utilities.Config;
 import jakarta.persistence.EntityManagerFactory;
