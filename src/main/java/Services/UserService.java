@@ -1,8 +1,9 @@
 package Services;
 
 import Entities.UserProfile;
+import Managers.SessionManager;
 import Repositories.UserProfileRepository;
-import Services.Interface.SessionListener;
+import Managers.Interface.SessionListener;
 import Utilities.Security.PasswordHasher;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
@@ -25,6 +26,7 @@ public class UserService implements SessionListener {
 
     private final String ALLOWED_REGEX = "^[a-zA-Z0-9_]*$";
     private final int MIN_USERNAME_LENGTH = 3;
+    private final int MIN_PASSWORD_LENGTH = 8;
 
     private final EntityManagerFactory emf;
     private final EntityManager em;
@@ -109,6 +111,10 @@ public class UserService implements SessionListener {
             );
         }
 
+        if (password.length < MIN_PASSWORD_LENGTH) {
+            throw new IllegalArgumentException("Mot de passe trop court: minimum " + MIN_PASSWORD_LENGTH + " caractères.");
+        }
+
         try {
 
             tx.begin();
@@ -133,12 +139,6 @@ public class UserService implements SessionListener {
 
             return null;
 
-        }
-
-        try {
-            SessionManager.setCurrentUser(attemptTarget);
-        } catch (IllegalStateException e) {
-            throw new IllegalStateException("Impossible de se connecter: un utilisateur est déjà connecté.");
         }
 
         return attemptTarget;
