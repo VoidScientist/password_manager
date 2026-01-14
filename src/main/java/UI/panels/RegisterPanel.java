@@ -18,9 +18,9 @@ public class RegisterPanel extends JPanel {
     private MainFrame mainFrame;
 
     // Chemins des images
-    private static final String ILLUSTRATION_PATH = "/ressource/images/logo.png";
-    private static final String EYE_OPEN_PATH = "/ressource/images/eye-open.png";
-    private static final String EYE_CLOSED_PATH = "/ressource/images/eye-closed.png";
+    private static final String ILLUSTRATION_PATH = "/images/logo.png";
+    private static final String EYE_OPEN_PATH = "/images/eye-open.png";
+    private static final String EYE_CLOSED_PATH = "/images/eye-closed.png";
 
     public RegisterPanel(MainFrame mainFrame) {
         this.mainFrame = mainFrame;
