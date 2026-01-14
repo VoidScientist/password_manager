@@ -4,13 +4,30 @@ import Utilities.Security.Encryption.PasswordEncrypter;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
-import java.util.Date;
 import java.util.Objects;
 
 /**
- * La classe Profile est l'entité JPA contenant les informations liées aux comptes enregistrés.
- * <br><br>
- * C'est la propriétaire des relations avec les autres entités dans la base de donnée.
+ * <p>La classe Profile est l'entité JPA contenant les informations liées aux comptes enregistrés.</p>
+ *
+ * <p>C'est la propriétaire des relations avec les autres entités dans la base de donnée.</p>
+ *
+ * <p>Elle contient:</p>
+ * <ul>
+ *     <li>id</li>
+ *     <li>creationDate</li>
+ *     <li>service</li>
+ *     <li>username</li>
+ *     <li>email</li>
+ *     <li>encrypted_password</li>
+ *     <li>password</li>
+ *     <li>url</li>
+ *     <li>owner</li>
+ *     <li>category</li>
+ * </ul>
+ *
+ * @author ARCELON Louis, MARTEL Mathieu
+ * @version v0.1
+ *
  */
 @Entity
 public class Profile {
@@ -27,6 +44,9 @@ public class Profile {
 
     @Column(name="USERNAME")
     private String username;
+
+    @Column(name="EMAIL")
+    private String email;
 
     @Column(name="PASSWORD")
     private String encrypted_password;
@@ -47,10 +67,10 @@ public class Profile {
 
     public Profile() {}
 
-    public Profile(String service, String username, String encrypted_password, String url) {
+    public Profile(String service, String username, String password, String url) {
         this.service = service;
         this.username = username;
-        this.encrypted_password = encrypted_password;
+        this.password = password;
         this.url = url;
     }
 
@@ -59,7 +79,7 @@ public class Profile {
         this.creationDate = LocalDateTime.now();
 
         if (this.owner != null) {
-            password = PasswordEncrypter.encrypt(this.encrypted_password, this.owner.getPasswordHash());
+            password = PasswordEncrypter.encrypt(this.getPassword(), this.owner.getPasswordHash());
         }
 
     }
@@ -67,7 +87,7 @@ public class Profile {
     @PreUpdate
     private void encryptPassword() {
         if (this.owner != null) {
-            this.encrypted_password = PasswordEncrypter.encrypt(this.encrypted_password, this.owner.getPasswordHash());
+            this.encrypted_password = PasswordEncrypter.encrypt(this.getPassword(), this.owner.getPasswordHash());
         }
     }
 
@@ -111,10 +131,6 @@ public class Profile {
         this.username = username;
     }
 
-    public void setEncrypted_password(String encrypted_password) {
-        this.encrypted_password = encrypted_password;
-    }
-
     public void setService(String service) {
         this.service = service;
     }
@@ -131,7 +147,18 @@ public class Profile {
         }
 
         return this.password;
+    }
 
+    public void setPassword(String password) {
+       this.password = password;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
     }
 
     @Override
