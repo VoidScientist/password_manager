@@ -2,6 +2,7 @@ package Services;
 
 import Entities.UserProfile;
 import Repositories.UserProfileRepository;
+import Services.Interface.SessionListener;
 import Utilities.Security.PasswordHasher;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
@@ -20,10 +21,10 @@ import java.security.NoSuchAlgorithmException;
  * @see Entities.UserProfile
  *
  */
-public class UserService {
+public class UserService implements SessionListener {
 
     private final String ALLOWED_REGEX = "^[a-zA-Z0-9_]*$";
-    private final int MIN_USERNAME_LENGTH = 1;
+    private final int MIN_USERNAME_LENGTH = 3;
 
     private final EntityManagerFactory emf;
     private final EntityManager em;
@@ -49,9 +50,10 @@ public class UserService {
      * @return le UserProfile géré par l'entity manager de UserService
      * @throws IllegalArgumentException en cas de mauvais nom d'utilisateur ou mot de passe
      * @throws Exception au cas où le PasswordHasher rencontre une erreur
+     * @throws IllegalStateException si un utilisateur est déjà connecté
      */
     public UserProfile login(String username, char[] password)
-            throws IllegalArgumentException, Exception {
+            throws IllegalArgumentException, IllegalStateException, Exception {
 
         UserProfile attemptTarget = userRep.findByUsername(username);
 
@@ -73,6 +75,12 @@ public class UserService {
         if (!loginHash.equals(correctHash))
             throw new IllegalArgumentException("Mauvais mot de passe");
 
+        try {
+            SessionManager.setCurrentUser(attemptTarget);
+        } catch (IllegalStateException e) {
+            throw new IllegalStateException("Impossible de se connecter: un utilisateur est déjà connecté.");
+        }
+
         return attemptTarget;
 
     }
@@ -86,16 +94,18 @@ public class UserService {
      * @return profil de l'utilisateur, géré par l'entity manager de UserService
      * @throws IllegalArgumentException en cas de nom d'utilisateur dupliqué ou invalide
      * @throws Exception au cas où PasswordHasher renvoie une exception
+     * @throws IllegalStateException si un utilisateur est déjà connecté
      */
     public UserProfile register(String username, char[] password)
-        throws IllegalArgumentException, Exception {
+        throws IllegalArgumentException, IllegalStateException, Exception {
 
         EntityTransaction tx = em.getTransaction();
         UserProfile attemptTarget;
 
         if (!isUsernameValid(username)) {
             throw new IllegalArgumentException(
-                    "Le nom d'utilisateur ne peut contenir que des chiffres et des lettres, ou un underscore (_)."
+                    "Le nom d'utilisateur ne peut contenir que des chiffres et des lettres, ou un underscore (_). "
+                    + "Il doit aussi faire plus de " + MIN_USERNAME_LENGTH + " caractères."
             );
         }
 
@@ -125,6 +135,12 @@ public class UserService {
 
         }
 
+        try {
+            SessionManager.setCurrentUser(attemptTarget);
+        } catch (IllegalStateException e) {
+            throw new IllegalStateException("Impossible de se connecter: un utilisateur est déjà connecté.");
+        }
+
         return attemptTarget;
 
     }
@@ -146,4 +162,8 @@ public class UserService {
 
     }
 
+    @Override
+    public void onDisconnect() {
+        this.em.clear();
+    }
 }
