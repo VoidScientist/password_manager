@@ -1,5 +1,6 @@
 package Entities;
 
+import Utilities.Security.Encryption.PasswordEncrypter;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
@@ -30,6 +31,9 @@ public class Profile {
     @Column(name="PASSWORD")
     private String encrypted_password;
 
+    @Transient
+    private String password;
+
     @Column(name="URL")
     private String url;
 
@@ -51,8 +55,20 @@ public class Profile {
     }
 
     @PrePersist
-    public void prePersist() {
+    private void prePersist() {
         this.creationDate = LocalDateTime.now();
+
+        if (this.owner != null) {
+            password = PasswordEncrypter.encrypt(this.encrypted_password, this.owner.getPasswordHash());
+        }
+
+    }
+
+    @PreUpdate
+    private void encryptPassword() {
+        if (this.owner != null) {
+            this.encrypted_password = PasswordEncrypter.encrypt(this.encrypted_password, this.owner.getPasswordHash());
+        }
     }
 
     public int getId() {
@@ -107,6 +123,17 @@ public class Profile {
         this.owner = owner;
     }
 
+    public String getPassword() {
+        if (password != null) return this.password;
+
+        if (this.owner != null) {
+            this.password = PasswordEncrypter.decrypt(encrypted_password, this.owner.getPasswordHash());
+        }
+
+        return this.password;
+
+    }
+
     @Override
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) return false;
@@ -130,6 +157,7 @@ public class Profile {
                 ", service='" + service + '\'' +
                 ", username='" + username + '\'' +
                 ", encrypted_password='" + encrypted_password + '\'' +
+                ", password ='" + getPassword() + '\'' +
                 ", url='" + url + '\'' +
                 ", owner=" + ownerRep +
                 ", category=" + categoryRep +
