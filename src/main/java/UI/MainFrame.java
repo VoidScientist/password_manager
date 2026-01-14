@@ -36,6 +36,7 @@ public class MainFrame extends JFrame {
 
         // Ajouter les différentes pages
         contentPanel.add(new LoginPanel(this), "login");
+        contentPanel.add(new RegisterPanel(this), "register");
         contentPanel.add(new SecurityPanel(), "security");
         contentPanel.add(new PasswordGeneratorPanel(), "generator");
         contentPanel.add(new VaultPanel(), "vault");

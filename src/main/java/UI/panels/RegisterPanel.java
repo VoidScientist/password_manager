@@ -5,7 +5,7 @@ import UI.MainFrame;
 import javax.swing.*;
 import java.awt.*;
 
-public class LoginPanel extends JPanel {
+public class RegisterPanel extends JPanel {
 
     private static final Color PURPLE_BG = new Color(88, 70, 150);
     private static final Color BUTTON_COLOR = new Color(88, 70, 150);
@@ -13,6 +13,7 @@ public class LoginPanel extends JPanel {
 
     private JTextField usernameField;
     private JPasswordField passwordField;
+    private JPasswordField confirmPasswordField;
     private JLabel errorLabel;
     private MainFrame mainFrame;
 
@@ -21,7 +22,7 @@ public class LoginPanel extends JPanel {
     private static final String EYE_OPEN_PATH = "/images/eye-open.png";
     private static final String EYE_CLOSED_PATH = "/images/eye-closed.png";
 
-    public LoginPanel(MainFrame mainFrame) {
+    public RegisterPanel(MainFrame mainFrame) {
         this.mainFrame = mainFrame;
 
         setLayout(new BorderLayout());
@@ -89,14 +90,14 @@ public class LoginPanel extends JPanel {
         gbc.insets = new Insets(10, 40, 10, 40);
         gbc.fill = GridBagConstraints.HORIZONTAL;
 
-        // Titre "LOGIN"
-        JLabel titleLabel = new JLabel("LOGIN", SwingConstants.CENTER);
-        titleLabel.setFont(new Font("Arial", Font.BOLD, 48));
+        // Titre "CRÉER UN COMPTE"
+        JLabel titleLabel = new JLabel("INSCRIPTION", SwingConstants.CENTER);
+        titleLabel.setFont(new Font("Arial", Font.BOLD, 40));
         titleLabel.setForeground(Color.BLACK);
         gbc.gridx = 0;
         gbc.gridy = 0;
         gbc.gridwidth = 2;
-        gbc.insets = new Insets(40, 40, 40, 40);
+        gbc.insets = new Insets(30, 40, 30, 40);
         panel.add(titleLabel, gbc);
 
         // Label "Identifiant"
@@ -127,6 +128,61 @@ public class LoginPanel extends JPanel {
         panel.add(passwordLabel, gbc);
 
         // Panel mot de passe avec oeil
+        JPanel passwordPanel = createPasswordPanel(false);
+        gbc.gridy = 4;
+        gbc.insets = new Insets(0, 40, 15, 40);
+        panel.add(passwordPanel, gbc);
+
+        // Label "Confirmer le mot de passe"
+        JLabel confirmPasswordLabel = new JLabel("Confirmer le mot de passe");
+        confirmPasswordLabel.setFont(new Font("Arial", Font.PLAIN, 14));
+        gbc.gridy = 5;
+        gbc.insets = new Insets(5, 40, 5, 40);
+        panel.add(confirmPasswordLabel, gbc);
+
+        // Panel confirmation mot de passe avec oeil
+        JPanel confirmPasswordPanel = createPasswordPanel(true);
+        gbc.gridy = 6;
+        gbc.insets = new Insets(0, 40, 25, 40);
+        panel.add(confirmPasswordPanel, gbc);
+
+        // Label d'erreur (caché par défaut)
+        errorLabel = new JLabel(" ");
+        errorLabel.setFont(new Font("Arial", Font.PLAIN, 13));
+        errorLabel.setForeground(new Color(244, 67, 54)); // Rouge
+        errorLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        gbc.gridy = 7;
+        gbc.insets = new Insets(0, 40, 10, 40);
+        panel.add(errorLabel, gbc);
+
+        // Bouton CRÉER UN COMPTE
+        JButton registerButton = createStyledButton("CRÉER UN COMPTE", BUTTON_COLOR);
+        registerButton.setPreferredSize(new Dimension(300, 45));
+        registerButton.addActionListener(e -> handleRegister());
+        gbc.gridy = 8;
+        gbc.insets = new Insets(10, 40, 15, 40);
+        panel.add(registerButton, gbc);
+
+        // Séparateur OU
+        JLabel orLabel = new JLabel("OU", SwingConstants.CENTER);
+        orLabel.setFont(new Font("Arial", Font.PLAIN, 14));
+        orLabel.setForeground(Color.GRAY);
+        gbc.gridy = 9;
+        gbc.insets = new Insets(15, 40, 15, 40);
+        panel.add(orLabel, gbc);
+
+        // Bouton Retour à la connexion
+        JButton backToLoginButton = createOutlineButton("Se connecter");
+        backToLoginButton.setPreferredSize(new Dimension(300, 45));
+        backToLoginButton.addActionListener(e -> handleBackToLogin());
+        gbc.gridy = 10;
+        gbc.insets = new Insets(10, 40, 30, 40);
+        panel.add(backToLoginButton, gbc);
+
+        return panel;
+    }
+
+    private JPanel createPasswordPanel(boolean isConfirm) {
         JPanel passwordPanel = new JPanel(new BorderLayout());
         passwordPanel.setBackground(LIGHT_GRAY);
         passwordPanel.setBorder(BorderFactory.createCompoundBorder(
@@ -134,57 +190,28 @@ public class LoginPanel extends JPanel {
                 BorderFactory.createEmptyBorder(5, 10, 5, 10)
         ));
 
-        passwordField = new JPasswordField();
-        passwordField.setFont(new Font("Arial", Font.PLAIN, 14));
-        passwordField.setBackground(LIGHT_GRAY);
-        passwordField.setBorder(BorderFactory.createEmptyBorder());
-        passwordPanel.add(passwordField, BorderLayout.CENTER);
+        JPasswordField field;
+        if (isConfirm) {
+            confirmPasswordField = new JPasswordField();
+            field = confirmPasswordField;
+        } else {
+            passwordField = new JPasswordField();
+            field = passwordField;
+        }
+
+        field.setFont(new Font("Arial", Font.PLAIN, 14));
+        field.setBackground(LIGHT_GRAY);
+        field.setBorder(BorderFactory.createEmptyBorder());
+        passwordPanel.add(field, BorderLayout.CENTER);
 
         // Bouton oeil avec images
-        JButton togglePasswordButton = createEyeButton();
+        JButton togglePasswordButton = createEyeButton(field);
         passwordPanel.add(togglePasswordButton, BorderLayout.EAST);
 
-        gbc.gridy = 4;
-        gbc.insets = new Insets(0, 40, 30, 40);
-        panel.add(passwordPanel, gbc);
-
-        // Label d'erreur (caché par défaut)
-        errorLabel = new JLabel(" ");
-        errorLabel.setFont(new Font("Arial", Font.PLAIN, 13));
-        errorLabel.setForeground(new Color(244, 67, 54)); // Rouge
-        errorLabel.setHorizontalAlignment(SwingConstants.CENTER);
-        gbc.gridy = 5;
-        gbc.insets = new Insets(0, 40, 10, 40);
-        panel.add(errorLabel, gbc);
-
-        // Bouton SE CONNECTER
-        JButton loginButton = createStyledButton("SE CONNECTER", BUTTON_COLOR);
-        loginButton.setPreferredSize(new Dimension(300, 45));
-        loginButton.addActionListener(e -> handleLogin());
-        gbc.gridy = 6;
-        gbc.insets = new Insets(10, 40, 20, 40);
-        panel.add(loginButton, gbc);
-
-        // Séparateur OU
-        JLabel orLabel = new JLabel("OU", SwingConstants.CENTER);
-        orLabel.setFont(new Font("Arial", Font.PLAIN, 14));
-        orLabel.setForeground(Color.GRAY);
-        gbc.gridy = 7;
-        gbc.insets = new Insets(20, 40, 20, 40);
-        panel.add(orLabel, gbc);
-
-        // Bouton Créer un compte
-        JButton createAccountButton = createOutlineButton("Créer un compte");
-        createAccountButton.setPreferredSize(new Dimension(300, 45));
-        createAccountButton.addActionListener(e -> handleCreateAccount());
-        gbc.gridy = 8;
-        gbc.insets = new Insets(10, 40, 40, 40);
-        panel.add(createAccountButton, gbc);
-
-        return panel;
+        return passwordPanel;
     }
 
-    private JButton createEyeButton() {
+    private JButton createEyeButton(JPasswordField targetField) {
         JButton button = new JButton();
         button.setBorder(BorderFactory.createEmptyBorder());
         button.setBackground(LIGHT_GRAY);
@@ -199,13 +226,13 @@ public class LoginPanel extends JPanel {
         button.setIcon(eyeClosedIcon);
 
         button.addActionListener(e -> {
-            if (passwordField.getEchoChar() == (char) 0) {
+            if (targetField.getEchoChar() == (char) 0) {
                 // Masquer le mot de passe
-                passwordField.setEchoChar('•');
+                targetField.setEchoChar('•');
                 button.setIcon(eyeClosedIcon);
             } else {
                 // Afficher le mot de passe
-                passwordField.setEchoChar((char) 0);
+                targetField.setEchoChar((char) 0);
                 button.setIcon(eyeOpenIcon);
             }
         });
@@ -286,27 +313,46 @@ public class LoginPanel extends JPanel {
         return button;
     }
 
-    private void handleLogin() {
+    private void handleRegister() {
         String username = usernameField.getText();
         String password = new String(passwordField.getPassword());
+        String confirmPassword = new String(confirmPasswordField.getPassword());
 
         // Réinitialiser le message d'erreur
         errorLabel.setText(" ");
 
-        if (username.isEmpty() || password.isEmpty()) {
+        // Validations
+        if (username.isEmpty() || password.isEmpty() || confirmPassword.isEmpty()) {
             errorLabel.setText("Veuillez remplir tous les champs");
             return;
         }
 
-        // TODO: Vérifier les credentials avec le backend
-        System.out.println("Connexion avec: " + username);
+        if (!password.equals(confirmPassword)) {
+            errorLabel.setText("Les mots de passe ne correspondent pas");
+            return;
+        }
 
-        // Connexion réussie
-        mainFrame.onLoginSuccess();
+        if (password.length() < 8) {
+            errorLabel.setText("Le mot de passe doit contenir au moins 8 caractères");
+            return;
+        }
+
+        // TODO: Enregistrer l'utilisateur dans la base de données
+        System.out.println("Création de compte pour: " + username);
+
+        // Succès - afficher un message vert et retourner au login
+        errorLabel.setForeground(new Color(76, 209, 55)); // Vert
+        errorLabel.setText("Compte créé avec succès ! Redirection...");
+
+        // Retourner à la page de connexion après 1.5 secondes
+        Timer timer = new Timer(1500, e -> handleBackToLogin());
+        timer.setRepeats(false);
+        timer.start();
     }
 
-    private void handleCreateAccount() {
+    private void handleBackToLogin() {
         errorLabel.setText(" ");
-        mainFrame.showPage("register");
+        errorLabel.setForeground(new Color(244, 67, 54)); // Réinitialiser la couleur rouge
+        mainFrame.showPage("login");
     }
 }
