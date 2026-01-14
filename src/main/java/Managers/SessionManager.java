@@ -1,7 +1,7 @@
-package Services;
+package Managers;
 
 import Entities.UserProfile;
-import Services.Interface.SessionListener;
+import Managers.Interface.SessionListener;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -13,7 +13,7 @@ import java.util.Set;
  * @author ARCELON Louis, MARTEL Mathieu
  * @version v0.1
  *
- * @see Services.Interface.SessionListener
+ * @see SessionListener
  * @see Entities.UserProfile
  *
  */
@@ -40,6 +40,10 @@ public class SessionManager {
 
     public static void removeListener(SessionListener listener) {
         listeners.remove(listener);
+    }
+
+    public static boolean isConnected() {
+        return currentUser != null;
     }
 
     public static void disconnect() {

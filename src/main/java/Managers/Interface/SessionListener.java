@@ -1,4 +1,4 @@
-package Services.Interface;
+package Managers.Interface;
 
 public interface SessionListener {
 
