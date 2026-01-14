@@ -81,10 +81,10 @@ public class UserService {
      *
      * Méthode utilisée pour enregistrer les utilisateurs.
      *
-     * @param username nom de l'utilisateur à enregistrer (doit être unique)
+     * @param username nom de l'utilisateur à enregistrer (doit être unique et être alphanumérique + _)
      * @param password mot de passe de l'utilisateur à enregistrer
      * @return profil de l'utilisateur, géré par l'entity manager de UserService
-     * @throws IllegalArgumentException en cas de nom d'utilisateur dupliqué
+     * @throws IllegalArgumentException en cas de nom d'utilisateur dupliqué ou invalide
      * @throws Exception au cas où PasswordHasher renvoie une exception
      */
     public UserProfile register(String username, char[] password)
@@ -129,7 +129,14 @@ public class UserService {
 
     }
 
-
+    /**
+     *
+     * Méthode vérifiant la validité d'un nom d'utilisateur avec du regex en fonction de {@code ALLOWED_REGEX}
+     * Ne permet pas les noms d'utilisateur vide.
+     *
+     * @param username nom d'utilisateur à vérifier
+     * @return si le nom d'utilisateur est valide ou non
+     */
     private boolean isUsernameValid(String username) {
 
         boolean isValid = username.matches(ALLOWED_REGEX);
