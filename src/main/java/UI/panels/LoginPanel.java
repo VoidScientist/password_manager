@@ -1,5 +1,7 @@
 package UI.panels;
 
+import Managers.ServiceManager;
+import Managers.SessionManager;
 import UI.MainFrame;
 
 import javax.swing.*;
@@ -288,21 +290,23 @@ public class LoginPanel extends JPanel {
 
     private void handleLogin() {
         String username = usernameField.getText();
-        String password = new String(passwordField.getPassword());
+        char[] password = passwordField.getPassword();
 
         // Réinitialiser le message d'erreur
         errorLabel.setText(" ");
 
-        if (username.isEmpty() || password.isEmpty()) {
-            errorLabel.setText("Veuillez remplir tous les champs");
-            return;
+        try {
+            ServiceManager
+                    .getUserService()
+                    .login(username, password);
+        } catch (Exception e) {
+            errorLabel.setText(e.getMessage());
         }
 
-        // TODO: Vérifier les credentials avec le backend
-        System.out.println("Connexion avec: " + username);
+        if (SessionManager.isConnected()) {
+            mainFrame.onLoginSuccess();
+        }
 
-        // Connexion réussie
-        mainFrame.onLoginSuccess();
     }
 
     private void handleCreateAccount() {

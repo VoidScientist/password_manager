@@ -1,9 +1,11 @@
 package UI.panels;
 
+import Managers.ServiceManager;
 import UI.MainFrame;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.Arrays;
 
 public class RegisterPanel extends JPanel {
 
@@ -315,29 +317,34 @@ public class RegisterPanel extends JPanel {
 
     private void handleRegister() {
         String username = usernameField.getText();
-        String password = new String(passwordField.getPassword());
-        String confirmPassword = new String(confirmPasswordField.getPassword());
+        char[] password = passwordField.getPassword();
+        char[] confirmPassword = confirmPasswordField.getPassword();
 
         // Réinitialiser le message d'erreur
         errorLabel.setText(" ");
 
         // Validations
-        if (username.isEmpty() || password.isEmpty() || confirmPassword.isEmpty()) {
+        if (username.isEmpty() || password.length == 0|| confirmPassword.length == 0) {
             errorLabel.setText("Veuillez remplir tous les champs");
             return;
         }
 
-        if (!password.equals(confirmPassword)) {
+        if (!Arrays.equals(password, confirmPassword)) {
             errorLabel.setText("Les mots de passe ne correspondent pas");
             return;
         }
 
-        if (password.length() < 8) {
-            errorLabel.setText("Le mot de passe doit contenir au moins 8 caractères");
-            return;
+        try {
+            ServiceManager
+                    .getUserService()
+                    .register(username, password);
+        } catch (Exception e) {
+            if (e.getClass() == IllegalArgumentException.class || e.getClass() == IllegalStateException.class) {
+                errorLabel.setText(e.getMessage());
+            }
+            throw new RuntimeException(e.getMessage());
         }
 
-        // TODO: Enregistrer l'utilisateur dans la base de données
         System.out.println("Création de compte pour: " + username);
 
         // Succès - afficher un message vert et retourner au login
@@ -350,6 +357,7 @@ public class RegisterPanel extends JPanel {
         timer.start();
     }
 
+    // TODO: PARLER AVEC MATHIEU DU FAIT QUE REGISTER DANS LA BACKEND TE LOGIN EN MM TEMPS
     private void handleBackToLogin() {
         errorLabel.setText(" ");
         errorLabel.setForeground(new Color(244, 67, 54)); // Réinitialiser la couleur rouge
