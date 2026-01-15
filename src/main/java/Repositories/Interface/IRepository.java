@@ -8,8 +8,8 @@ import java.util.List;
  * @author ARCELON Louis, MARTEL Mathieu
  * @version v0.1
  *
- * @param <ModelType>
- * @param <ID>
+ * @param <ModelType> type du modèle du repository
+ * @param <ID> type de l'id du modèle
  */
 public interface IRepository<ModelType, ID> {
 
