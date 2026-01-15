@@ -93,12 +93,11 @@ public class UserService implements SessionListener {
      *
      * @param username nom de l'utilisateur à enregistrer (doit être unique et être alphanumérique + _)
      * @param password mot de passe de l'utilisateur à enregistrer
-     * @return profil de l'utilisateur, géré par l'entity manager de UserService
      * @throws IllegalArgumentException en cas de nom d'utilisateur dupliqué ou invalide
      * @throws Exception au cas où PasswordHasher renvoie une exception
      * @throws IllegalStateException si un utilisateur est déjà connecté
      */
-    public UserProfile register(String username, char[] password)
+    public void register(String username, char[] password)
         throws IllegalArgumentException, IllegalStateException, Exception {
 
         EntityTransaction tx = em.getTransaction();
@@ -123,11 +122,15 @@ public class UserService implements SessionListener {
 
             UserProfile newProfile = new UserProfile(username, hash);
 
-            attemptTarget = userRep.save(newProfile);
+            userRep.save(newProfile);
 
             tx.commit();
 
         } catch (Exception e) {
+
+            if (tx.isActive()) {
+                tx.rollback();
+            }
 
             if (e.getClass().equals(IllegalStateException.class) || e.getClass().equals(NoSuchAlgorithmException.class)) {
                 throw new Exception("Error hashing password");
@@ -137,11 +140,7 @@ public class UserService implements SessionListener {
                 throw new IllegalArgumentException("Ce nom d'utilisateur existe déjà!");
             }
 
-            return null;
-
         }
-
-        return attemptTarget;
 
     }
 
