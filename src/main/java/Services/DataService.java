@@ -11,6 +11,8 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.EntityTransaction;
 
+import java.util.List;
+
 /**
  * Classe s'occupant d'effectuer les actions sur les Profile et Category.
  *
@@ -95,6 +97,16 @@ public class DataService {
         } catch (IllegalArgumentException ignored) {}
 
         removeData(profile, this.profRep, "le profil");
+    }
+
+
+
+    public List<Category> getCategories() {
+
+        String uuid = SessionManager.getCurrentUser().getUuid();
+
+        return this.catRep.readAll(uuid);
+
     }
 
 

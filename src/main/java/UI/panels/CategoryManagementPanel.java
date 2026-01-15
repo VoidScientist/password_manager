@@ -2,6 +2,11 @@ package UI.panels;
 
 import Entities.Category;
 import Entities.UserProfile;
+import Managers.Interface.SessionListener;
+import Managers.ServiceManager;
+import Managers.SessionManager;
+import org.hibernate.Session;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
@@ -9,7 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-public class CategoryManagementPanel extends JPanel {
+public class CategoryManagementPanel extends JPanel implements SessionListener {
 
     private static final Color PURPLE_BG = new Color(88, 70, 150);
     private static final Color LIGHT_GRAY = new Color(240, 240, 240);
@@ -87,25 +92,19 @@ public class CategoryManagementPanel extends JPanel {
 
         add(categoryDetailPanel, BorderLayout.EAST);
 
-        // Charger les données
-        loadCategories();
+        SessionManager.addListener(this);
+
     }
 
     /**
      * Charge les catégories depuis le backend
-     * TODO: Appeler le service backend pour récupérer Set<Category>
      */
     private void loadCategories() {
-        // TODO: Remplacer par l'appel backend
-        // Temporaire
-        categories = new ArrayList<>();
-        Category c1 = new Category("Réseaux Sociaux", "Comptes Facebook, Instagram, Twitter, etc.");
-        Category c2 = new Category("Autre", "Catégorie par défaut pour les comptes non classés");
 
-        categories.add(c1);
-        categories.add(c2);
+        categories = ServiceManager.getDataService().getCategories();
 
         displayCategories();
+
     }
 
     private void displayCategories() {
@@ -364,15 +363,16 @@ public class CategoryManagementPanel extends JPanel {
             }
 
             if (isNewCategory) {
-                // TODO: Ajouter via backend
-                System.out.println("Ajout catégorie: " + newName);
-                Category newCategory = new Category(newName, newDesc);
+
+                Category newCategory = ServiceManager.getDataService().createCategory(newName, newDesc);
                 categories.add(newCategory);
+
             } else {
-                // TODO: Modifier via backend
-                System.out.println("Modification catégorie: " + category.getName() + " -> " + newName);
+
                 category.setName(newName);
                 category.setDesc(newDesc);
+
+                ServiceManager.getDataService().saveCategory(category);
             }
 
             displayCategories();
@@ -405,12 +405,13 @@ public class CategoryManagementPanel extends JPanel {
                 JOptionPane.WARNING_MESSAGE
         );
 
+        // supprimer le profil dans la db et l'interface
         if (confirm == JOptionPane.YES_OPTION) {
-            // TODO: Supprimer la catégorie via le backend
-            // categoryService.delete(category.getId());
-            System.out.println("Suppression de la catégorie: " + category.getName());
+
+            ServiceManager.getDataService().removeCategory(category);
 
             categories.remove(category);
+
             displayCategories();
         }
     }
@@ -491,4 +492,20 @@ public class CategoryManagementPanel extends JPanel {
         });
         return button;
     }
+
+
+    @Override
+    public void onLogin() {
+
+        loadCategories();
+
+    }
+
+    @Override
+    public void onDisconnect() {
+
+
+
+    }
+
 }
