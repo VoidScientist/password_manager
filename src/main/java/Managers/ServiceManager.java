@@ -1,5 +1,6 @@
 package Managers;
 
+import Services.DataService;
 import Services.UserService;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.Persistence;
@@ -19,6 +20,7 @@ public class ServiceManager {
 
     private static EntityManagerFactory emf;
     private static UserService userService;
+    private static DataService dataService;
 
     private ServiceManager() {}
 
@@ -28,9 +30,13 @@ public class ServiceManager {
      * @param persistenceUnitName unité de persistence à utiliser dans les services.
      */
     public static void init(String persistenceUnitName) {
+        if (initialized) {
+            throw new IllegalStateException("ServiceManager has already been initialized");
+        }
 
         emf =  Persistence.createEntityManagerFactory(persistenceUnitName);
         userService = new UserService(emf);
+        dataService = new DataService(emf);
 
         initialized = true;
 
@@ -42,6 +48,14 @@ public class ServiceManager {
         }
 
         return userService;
+    }
+
+    public static DataService getDataService() {
+        if (!initialized) {
+            throw new IllegalStateException("ServiceManager has not been initialized");
+        }
+
+        return dataService;
     }
 
 
