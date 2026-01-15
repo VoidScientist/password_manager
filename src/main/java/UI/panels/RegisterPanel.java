@@ -39,6 +39,14 @@ public class RegisterPanel extends JPanel {
         add(rightPanel, BorderLayout.CENTER);
     }
 
+    public void clearFields() {
+        usernameField.setText("");
+        passwordField.setText("");
+        confirmPasswordField.setText("");
+        errorLabel.setText(" ");
+        errorLabel.setForeground(new Color(244, 67, 54)); // Réinitialiser la couleur rouge
+    }
+
     private JPanel createLeftPanel() {
         JPanel panel = new JPanel() {
             @Override
@@ -204,6 +212,10 @@ public class RegisterPanel extends JPanel {
         field.setFont(new Font("Arial", Font.PLAIN, 14));
         field.setBackground(LIGHT_GRAY);
         field.setBorder(BorderFactory.createEmptyBorder());
+
+        // Ajouter l'action "Enter" pour créer le compte
+        field.addActionListener(e -> handleRegister());
+
         passwordPanel.add(field, BorderLayout.CENTER);
 
         // Bouton oeil avec images

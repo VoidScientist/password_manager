@@ -1,6 +1,8 @@
 package UI.panels;
 
 import javax.swing.*;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import java.awt.*;
 import java.security.SecureRandom;
 import Utilities.Security.Password.*;
@@ -149,6 +151,26 @@ public class PasswordGeneratorPanel extends JPanel {
         maxSpinner.setPreferredSize(new Dimension(60, 25));
         maxPanel.add(maxSpinner);
 
+        minSpinner.addChangeListener(e -> {
+            int min = (Integer) minSpinner.getValue();
+            int max = (Integer) maxSpinner.getValue();
+
+            // Si min devient supérieur à max, ajuster max
+            if (min > max) {
+                maxSpinner.setValue(min);
+            }
+        });
+
+        maxSpinner.addChangeListener(e -> {
+            int min = (Integer) minSpinner.getValue();
+            int max = (Integer) maxSpinner.getValue();
+
+            // Si max devient inférieur à min, ajuster min
+            if (max < min) {
+                minSpinner.setValue(max);
+            }
+        });
+
         lengthPanel.add(minPanel);
         lengthPanel.add(maxPanel);
 
@@ -178,12 +200,10 @@ public class PasswordGeneratorPanel extends JPanel {
         int min = (Integer) minSpinner.getValue();
         int max = (Integer) maxSpinner.getValue();
 
+        // Ajuster automatiquement si min > max (sécurité supplémentaire)
         if (min > max) {
-            JOptionPane.showMessageDialog(this,
-                    "Le minimum doit être inférieur ou égal au maximum",
-                    "Erreur",
-                    JOptionPane.ERROR_MESSAGE);
-            return;
+            max = min;
+            maxSpinner.setValue(max);
         }
 
         // Longueur aléatoire entre min et max
