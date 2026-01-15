@@ -11,6 +11,8 @@ package Managers.Interface;
  */
 public interface SessionListener {
 
+    void onLogin();
+
     void onDisconnect();
 
 }
