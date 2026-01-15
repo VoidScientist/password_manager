@@ -14,7 +14,10 @@
             <property name="jakarta.persistence.jdbc.driver" value="com.mysql.jdbc.Driver"/>
             <property name="jakarta.persistence.jdbc.url" value="jdbc:mysql://localhost:3306/secur2i"/>
             <property name="jakarta.persistence.jdbc.user" value="root"/>
-            <property name="jakarta.persistence.schema-generation.database.action" value="create"/>
+
+
+            <!-- UTILISATION HIBERNATE POUR CREER LES TABLES - PERMET DE CREER SEULEMENT SI BESOIN !-->
+            <property name="hibernate.hbm2ddl.auto" value="update"/>
         </properties>
 
     </persistence-unit>
