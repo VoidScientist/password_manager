@@ -7,13 +7,17 @@ import UI.panels.*;
 import javax.swing.*;
 import java.awt.*;
 
-// La fenêtre principale
+// La fenêtre principale de l'application
+
 public class MainFrame extends JFrame implements SessionListener {
 
     private SideMenu sideMenu;
     private JPanel contentPanel;
     private CardLayout cardLayout;
     private JPanel mainContainer;
+
+    private LoginPanel loginPanel;
+    private RegisterPanel registerPanel;
 
     private boolean isLoggedIn = false;
 
@@ -36,9 +40,13 @@ public class MainFrame extends JFrame implements SessionListener {
         cardLayout = new CardLayout();
         contentPanel.setLayout(cardLayout);
 
+        // Créer et stocker les références aux panels
+        loginPanel = new LoginPanel(this);
+        registerPanel = new RegisterPanel(this);
+
         // Ajouter les différentes pages
-        contentPanel.add(new LoginPanel(this), "login");
-        contentPanel.add(new RegisterPanel(this), "register");
+        contentPanel.add(loginPanel, "login");
+        contentPanel.add(registerPanel, "register");
         contentPanel.add(new PasswordGeneratorPanel(), "generator");
         contentPanel.add(new VaultPanel(), "vault");
         contentPanel.add(new SecurityScorePanel(), "securityscore");
@@ -48,16 +56,20 @@ public class MainFrame extends JFrame implements SessionListener {
         mainContainer.add(contentPanel, BorderLayout.CENTER);
         add(mainContainer);
 
+        // Enregistrer ce MainFrame comme listener du SessionManager
         SessionManager.addListener(this);
 
         // Afficher la page de login par défaut
         showPage("login");
     }
 
-
+    // Méthode appelée lors de la connexion réussie
     @Override
     public void onLogin() {
         isLoggedIn = true;
+
+        // Nettoyer les champs du LoginPanel
+        loginPanel.clearFields();
 
         // Ajouter le menu à gauche
         mainContainer.add(sideMenu, BorderLayout.WEST);
@@ -80,6 +92,9 @@ public class MainFrame extends JFrame implements SessionListener {
         sideMenu.setVisible(false);
         mainContainer.remove(sideMenu);
 
+        // Nettoyer les champs du LoginPanel avant de l'afficher
+        loginPanel.clearFields();
+
         // Retourner à la page de login
         showPage("login");
 
@@ -90,8 +105,13 @@ public class MainFrame extends JFrame implements SessionListener {
 
     // Méthode pour changer de page
     public void showPage(String pageName) {
+        // Nettoyer les champs avant d'afficher une page
+        if (pageName.equals("login")) {
+            registerPanel.clearFields();
+        } else if (pageName.equals("register")) {
+            loginPanel.clearFields();
+        }
+
         cardLayout.show(contentPanel, pageName);
     }
-
-
 }

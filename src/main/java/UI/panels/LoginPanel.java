@@ -6,6 +6,7 @@ import UI.MainFrame;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
 
 public class LoginPanel extends JPanel {
 
@@ -36,6 +37,12 @@ public class LoginPanel extends JPanel {
 
         add(leftPanel, BorderLayout.WEST);
         add(rightPanel, BorderLayout.CENTER);
+    }
+
+    public void clearFields() {
+        usernameField.setText("");
+        passwordField.setText("");
+        errorLabel.setText(" ");
     }
 
     private JPanel createLeftPanel() {
@@ -140,6 +147,10 @@ public class LoginPanel extends JPanel {
         passwordField.setFont(new Font("Arial", Font.PLAIN, 14));
         passwordField.setBackground(LIGHT_GRAY);
         passwordField.setBorder(BorderFactory.createEmptyBorder());
+
+        // Ajouter l'action "Enter" pour se connecter
+        passwordField.addActionListener(e -> handleLogin());
+
         passwordPanel.add(passwordField, BorderLayout.CENTER);
 
         // Bouton oeil avec images
