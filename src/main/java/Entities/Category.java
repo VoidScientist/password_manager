@@ -79,10 +79,6 @@ public class Category {
         boolean success = this.profiles.add(profile);
         if (success) {
             profile.setCategory(this);
-
-            if (this.owner != null) {
-                this.owner.addProfile(profile);
-            }
         } else {
             throw new IllegalArgumentException("Failed to add profile");
         }
