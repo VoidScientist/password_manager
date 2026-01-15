@@ -303,10 +303,6 @@ public class LoginPanel extends JPanel {
             errorLabel.setText(e.getMessage());
         }
 
-        if (SessionManager.isConnected()) {
-            mainFrame.onLoginSuccess();
-        }
-
     }
 
     private void handleCreateAccount() {
