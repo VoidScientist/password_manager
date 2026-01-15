@@ -12,6 +12,9 @@ import java.util.*;
  *
  */
 @Entity
+@Table(uniqueConstraints = {
+        @UniqueConstraint(columnNames = {"NAME", "OWNER"})
+})
 public class Category {
 
     @Id
