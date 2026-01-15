@@ -13,8 +13,8 @@ public class VaultPanel extends JPanel {
     private static final Color LIGHT_GRAY = new Color(240, 240, 240);
 
     // Chemins des images pour le bouton œil
-    private static final String EYE_OPEN_PATH = "/ressource/images/eye-open.png";
-    private static final String EYE_CLOSED_PATH = "/ressource/images/eye-closed.png";
+    private static final String EYE_OPEN_PATH = "/images/eye-open.png";
+    private static final String EYE_CLOSED_PATH = "/images/eye-closed.png";
 
     private JPanel accountListPanel;
     private JPanel detailPanel;
