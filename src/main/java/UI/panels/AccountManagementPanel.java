@@ -1,6 +1,9 @@
 package UI.panels;
 
 import Entities.UserProfile;
+import Managers.ServiceManager;
+import Managers.SessionManager;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
@@ -342,9 +345,9 @@ public class AccountManagementPanel extends JPanel {
         );
 
         if (result == JOptionPane.OK_OPTION) {
-            String password = new String(confirmPasswordField.getPassword());
+            char[] password = this.currentPasswordField.getPassword();
 
-            if (password.isEmpty()) {
+            if (password.length == 0) {
                 JOptionPane.showMessageDialog(
                         this,
                         "Veuillez entrer votre mot de passe",
@@ -354,8 +357,13 @@ public class AccountManagementPanel extends JPanel {
                 return;
             }
 
-            // TODO: Vérifier le mot de passe et supprimer le compte via le backend
-            System.out.println("Suppression du compte confirmée avec mot de passe");
+            try {
+                ServiceManager.getUserService().removeAccount(password);
+            } catch (Exception e) {
+                JOptionPane.showMessageDialog(this, e.getMessage(), "Une erreur est survenue", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
 
             // Afficher un message de confirmation
             JOptionPane.showMessageDialog(
@@ -365,8 +373,7 @@ public class AccountManagementPanel extends JPanel {
                     JOptionPane.INFORMATION_MESSAGE
             );
 
-            // TODO: Rediriger vers la page de login
-            // mainFrame.showPage("login");
+            SessionManager.disconnect();
         }
     }
 
