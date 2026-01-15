@@ -1,12 +1,14 @@
 package UI;
 
+import Managers.Interface.SessionListener;
+import Managers.SessionManager;
 import UI.panels.*;
 
 import javax.swing.*;
 import java.awt.*;
 
 // La fenêtre principale
-public class MainFrame extends JFrame {
+public class MainFrame extends JFrame implements SessionListener {
 
     private SideMenu sideMenu;
     private JPanel contentPanel;
@@ -46,12 +48,15 @@ public class MainFrame extends JFrame {
         mainContainer.add(contentPanel, BorderLayout.CENTER);
         add(mainContainer);
 
+        SessionManager.addListener(this);
+
         // Afficher la page de login par défaut
         showPage("login");
     }
 
-    // Méthode appelée après connexion réussie
-    public void onLoginSuccess() {
+
+    @Override
+    public void onLogin() {
         isLoggedIn = true;
 
         // Ajouter le menu à gauche
@@ -67,7 +72,8 @@ public class MainFrame extends JFrame {
     }
 
     // Méthode appelée lors de la déconnexion
-    public void onLogout() {
+    @Override
+    public void onDisconnect() {
         isLoggedIn = false;
 
         // Retirer et cacher le menu latéral

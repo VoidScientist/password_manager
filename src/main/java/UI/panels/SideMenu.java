@@ -1,5 +1,6 @@
 package UI.panels;
 
+import Managers.SessionManager;
 import UI.MainFrame;
 
 import javax.swing.*;
@@ -153,9 +154,7 @@ public class SideMenu extends JPanel {
                     JOptionPane.QUESTION_MESSAGE
             );
 
-            if (confirm == JOptionPane.YES_OPTION) {
-                mainFrame.onLogout();
-            }
+            SessionManager.disconnect();
         });
 
         return button;
