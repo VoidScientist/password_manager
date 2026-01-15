@@ -5,12 +5,10 @@ import Managers.SessionManager;
 import Repositories.UserProfileRepository;
 import Managers.Interface.SessionListener;
 import Utilities.Security.PasswordHasher;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.EntityManagerFactory;
-import jakarta.persistence.EntityTransaction;
-import jakarta.persistence.RollbackException;
+import jakarta.persistence.*;
 
 import java.security.NoSuchAlgorithmException;
+import java.util.Arrays;
 
 /**
  * Classe s'occupant d'effectuer les actions telles que connecter, enregistrer et supprimer des utilisateurs.
@@ -63,19 +61,18 @@ public class UserService implements SessionListener {
             throw new IllegalArgumentException("Il n'existe pas d'utilisateurs avec ce nom d'utilisateur.");
         }
 
-        String loginHash;
 
-        String correctHash = attemptTarget.getPasswordHash().split("\\$")[1];
-        String b64Salt = attemptTarget.getPasswordHash().split("\\$")[0];
+        boolean isPasswordValid;
 
         try {
-            loginHash = PasswordHasher.hashPasswordFromSalt(b64Salt, password);
-        } catch (Exception e) {
-            throw new Exception("Error hashing password");
+            isPasswordValid = checkPassword(password, attemptTarget.getPasswordHash());
+        } catch (NoSuchAlgorithmException e) {
+            throw new Exception("Erreur de hashage du mot de passe");
         }
 
-        if (!loginHash.equals(correctHash))
+        if (!isPasswordValid)
             throw new IllegalArgumentException("Mauvais mot de passe");
+
 
         try {
             SessionManager.setCurrentUser(attemptTarget);
@@ -99,6 +96,10 @@ public class UserService implements SessionListener {
      */
     public void register(String username, char[] password)
         throws IllegalArgumentException, IllegalStateException, Exception {
+
+        if (SessionManager.getCurrentUser() != null) {
+            throw new IllegalStateException("Utilisateur déjà connecté");
+        }
 
         EntityTransaction tx = em.getTransaction();
         UserProfile attemptTarget;
@@ -144,6 +145,51 @@ public class UserService implements SessionListener {
 
     }
 
+
+    public void removeAccount(char[] password)
+            throws IllegalStateException, IllegalArgumentException, Exception {
+
+        if (SessionManager.getCurrentUser() == null) {
+            throw new IllegalStateException("Pas d'utilisateur connecté");
+        }
+
+        UserProfile account = SessionManager.getCurrentUser();
+
+
+        boolean isPasswordValid;
+        try {
+            isPasswordValid = checkPassword(password, account.getPasswordHash());
+        } catch (NoSuchAlgorithmException e) {
+            throw new Exception("Erreur du hashage du mot de passe");
+        }
+
+        if (!isPasswordValid) {
+            throw new IllegalArgumentException("Mauvais mot de passe");
+        }
+
+        EntityTransaction tx = em.getTransaction();
+
+        try {
+
+            tx.begin();
+
+            userRep.delete(account);
+
+            tx.commit();
+
+        } catch (Exception e) {
+
+            if (tx.isActive()) {
+                tx.rollback();
+            }
+
+            throw new Exception("Erreur lors de la déconnexion");
+
+        }
+
+    }
+
+
     /**
      *
      * Méthode vérifiant la validité d'un nom d'utilisateur avec du regex en fonction de {@code ALLOWED_REGEX}
@@ -160,6 +206,26 @@ public class UserService implements SessionListener {
         return isValid && hasEnoughCharacters;
 
     }
+
+
+    private static boolean checkPassword(char[] password, String hashedPassword)
+            throws NoSuchAlgorithmException {
+
+        String loginHash;
+
+        String correctHash = hashedPassword.split("\\$")[1];
+        String b64Salt = hashedPassword.split("\\$")[0];
+
+        try {
+            loginHash = PasswordHasher.hashPasswordFromSalt(b64Salt, password);
+        } catch (Exception e) {
+            throw new NoSuchAlgorithmException("Error hashing password");
+        }
+
+        return loginHash.equals(correctHash);
+
+    }
+
 
     @Override
     public void onLogin() {}
