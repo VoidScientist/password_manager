@@ -341,6 +341,7 @@ public class RegisterPanel extends JPanel {
         } catch (Exception e) {
             if (e.getClass() == IllegalArgumentException.class || e.getClass() == IllegalStateException.class) {
                 errorLabel.setText(e.getMessage());
+                return;
             }
             throw new RuntimeException(e.getMessage());
         }
