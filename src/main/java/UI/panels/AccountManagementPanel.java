@@ -347,15 +347,6 @@ public class AccountManagementPanel extends JPanel {
         if (result == JOptionPane.OK_OPTION) {
             char[] password = this.currentPasswordField.getPassword();
 
-            if (password.length == 0) {
-                JOptionPane.showMessageDialog(
-                        this,
-                        "Veuillez entrer votre mot de passe",
-                        "Erreur",
-                        JOptionPane.ERROR_MESSAGE
-                );
-                return;
-            }
 
             try {
                 ServiceManager.getUserService().removeAccount(password);
