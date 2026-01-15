@@ -162,6 +162,9 @@ public class UserService implements SessionListener {
     }
 
     @Override
+    public void onLogin() {}
+
+    @Override
     public void onDisconnect() {
         this.em.clear();
     }

@@ -27,6 +27,7 @@ public class SessionManager {
         if (currentUser != null) {
             throw new IllegalStateException("UserProfile already set");
         }
+        listeners.forEach(SessionListener::onLogin);
         currentUser = u;
     }
 
