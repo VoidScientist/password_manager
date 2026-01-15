@@ -7,10 +7,13 @@ import java.awt.*;
 import java.awt.event.*;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
+import Managers.Interface.SessionListener;
+
+import Managers.ServiceManager;
+import Managers.SessionManager;
 import Utilities.Security.Password.*;
 
-public class VaultPanel extends JPanel {
+public class VaultPanel extends JPanel implements SessionListener {
 
     private static final Color PURPLE_BG = new Color(88, 70, 150);
     private static final Color LIGHT_GRAY = new Color(240, 240, 240);
@@ -60,7 +63,8 @@ public class VaultPanel extends JPanel {
 
         add(detailPanel, BorderLayout.EAST);
 
-        loadCategories();
+        SessionManager.addListener(this);
+
         loadProfiles();
         displayAllProfiles();
     }
@@ -174,19 +178,12 @@ public class VaultPanel extends JPanel {
 
     /**
      * Charge les catégories depuis le backend
-     * TODO: Appeler le service backend pour récupérer List<Category>
+     *
      */
     private void loadCategories() {
-        // TODO: Remplacer par l'appel backend
 
         // Simulation temporaire
-        categories = new ArrayList<>();
-        categories.add(new Category("Réseaux Sociaux", "Comptes sociaux"));
-        categories.add(new Category("Banking", "Comptes bancaires"));
-        categories.add(new Category("Email", "Comptes email"));
-        categories.add(new Category("Shopping", "Sites de shopping"));
-        categories.add(new Category("Travail", "Comptes professionnels"));
-        categories.add(new Category("Autre", "Autres comptes"));
+        categories = ServiceManager.getDataService().getCategories();
     }
 
     /**
@@ -938,5 +935,15 @@ public class VaultPanel extends JPanel {
             System.err.println("Impossible de charger l'image: " + path);
             return null;
         }
+    }
+
+    @Override
+    public void onLogin() {
+        loadCategories();
+    }
+
+    @Override
+    public void onDisconnect() {
+
     }
 }
