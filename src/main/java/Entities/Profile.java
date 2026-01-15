@@ -79,7 +79,7 @@ public class Profile {
         this.creationDate = LocalDateTime.now();
 
         if (this.owner != null) {
-            password = PasswordEncrypter.encrypt(this.getPassword(), this.owner.getPasswordHash());
+            this.encrypted_password = PasswordEncrypter.encrypt(this.getPassword(), this.owner.getPasswordHash());
         }
 
     }

@@ -76,12 +76,7 @@ public class UserProfile {
     public void removeCategory(Category category) throws IllegalArgumentException {
 
         boolean success = this.categories.remove(category);
-        if (success) {
-            category.setOwner(null);
-            for (Profile profile : category.getProfiles()) {
-                category.removeProfile(profile);
-            }
-        } else {
+        if (!success) {
             throw new IllegalArgumentException("No such category in user categories");
         }
 
@@ -101,9 +96,7 @@ public class UserProfile {
     public void removeProfile(Profile profile) throws IllegalArgumentException {
 
         boolean success = this.profiles.remove(profile);
-        if (success) {
-            profile.setOwner(null);
-        } else   {
+        if (!success) {
             throw new IllegalArgumentException("No such profile in user profiles");
         }
 
