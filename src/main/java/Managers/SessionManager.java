@@ -4,6 +4,7 @@ import Entities.UserProfile;
 import Managers.Interface.SessionListener;
 
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -41,6 +42,16 @@ public class SessionManager {
 
     public static void removeListener(SessionListener listener) {
         listeners.remove(listener);
+    }
+
+    public static void updateCurrentProfile(UserProfile updated) {
+
+        if (!Objects.equals(updated.getUuid(), currentUser.getUuid())) {
+            throw new IllegalArgumentException("Les UUIDs doivent être identiques");
+        }
+
+        currentUser = updated;
+
     }
 
     public static boolean isConnected() {

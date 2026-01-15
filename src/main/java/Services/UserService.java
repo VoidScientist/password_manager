@@ -102,7 +102,6 @@ public class UserService implements SessionListener {
         }
 
         EntityTransaction tx = em.getTransaction();
-        UserProfile attemptTarget;
 
         if (!isUsernameValid(username)) {
             throw new IllegalArgumentException(
@@ -184,6 +183,40 @@ public class UserService implements SessionListener {
             }
 
             throw new Exception("Erreur lors de la déconnexion");
+
+        }
+
+    }
+    
+    public UserProfile updateProfile(UserProfile profile, String username, char[] password) throws Exception {
+
+        EntityTransaction tx = em.getTransaction();        
+        
+        
+        if (password.length < MIN_PASSWORD_LENGTH) {
+            throw new IllegalArgumentException("Mot de passe trop court: minimum " + MIN_PASSWORD_LENGTH + " caractères.");
+        }
+
+
+        try {
+            tx.begin();
+
+            profile.setUsername(username);
+            profile.setPasswordHash(PasswordHasher.hashPassword(password));
+
+            UserProfile result = userRep.save(profile);
+
+            tx.commit();
+
+            return result;
+
+        } catch (Exception e) {
+
+            if (tx.isActive()) {
+                tx.rollback();
+            }
+
+            throw new Exception("Mise à jour du profil échouée");
 
         }
 

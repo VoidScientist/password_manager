@@ -1,14 +1,19 @@
 package UI.panels;
 
 import Entities.UserProfile;
+import Managers.Interface.SessionListener;
 import Managers.ServiceManager;
 import Managers.SessionManager;
+import Services.UserService;
+import org.hibernate.Session;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.security.Provider;
+import java.util.Arrays;
 
-public class AccountManagementPanel extends JPanel {
+public class AccountManagementPanel extends JPanel implements SessionListener {
 
     private static final Color PURPLE_BG = new Color(88, 70, 150);
     private static final Color LIGHT_GRAY = new Color(240, 240, 240);
@@ -54,8 +59,7 @@ public class AccountManagementPanel extends JPanel {
         scrollPane.getVerticalScrollBar().setUnitIncrement(16);
         add(scrollPane, BorderLayout.CENTER);
 
-        // Charger les données
-        loadUserData();
+        SessionManager.addListener(this);
     }
 
     private JPanel createAccountSection() {
@@ -241,16 +245,15 @@ public class AccountManagementPanel extends JPanel {
     }
 
     private void loadUserData() {
-        // TODO: Charger les données de l'utilisateur depuis le backend
 
-        usernameField.setText("jean.jean");
+        usernameField.setText(SessionManager.getCurrentUser().getUsername());
     }
 
     private void handleSaveAccount() {
         String username = usernameField.getText();
-        String currentPassword = new String(currentPasswordField.getPassword());
-        String newPassword = new String(newPasswordField.getPassword());
-        String confirmPassword = new String(confirmPasswordField.getPassword());
+        char[] currentPassword = currentPasswordField.getPassword();
+        char[] newPassword = newPasswordField.getPassword();
+        char[] confirmPassword = confirmPasswordField.getPassword();
 
         // Réinitialiser le message d'erreur
         errorLabel.setText(" ");
@@ -262,34 +265,39 @@ public class AccountManagementPanel extends JPanel {
             return;
         }
 
-        // Si l'utilisateur veut changer son mot de passe
-        if (!newPassword.isEmpty() || !confirmPassword.isEmpty()) {
-            if (currentPassword.isEmpty()) {
-                errorLabel.setText("Veuillez entrer votre mot de passe actuel");
-                return;
-            }
-
-            if (newPassword.isEmpty()) {
-                errorLabel.setText("Veuillez entrer un nouveau mot de passe");
-                return;
-            }
-
-            if (!newPassword.equals(confirmPassword)) {
-                errorLabel.setText("Les mots de passe ne correspondent pas");
-                return;
-            }
-
-            if (newPassword.length() < 8) {
-                errorLabel.setText("Le mot de passe doit contenir au moins 8 caractères");
-                return;
-            }
+        if (currentPassword.length == 0) {
+            errorLabel.setText("Veuillez entrer votre mot de passe actuel");
+            return;
         }
 
-        // TODO: Sauvegarder les modifications via le backend
-        System.out.println("Sauvegarde du profil: " + username);
-        if (!newPassword.isEmpty()) {
-            System.out.println("Changement de mot de passe");
+        if (newPassword.length == 0) {
+            errorLabel.setText("Veuillez entrer un nouveau mot de passe");
+            return;
         }
+
+        if (!Arrays.equals(confirmPassword, newPassword)) {
+            errorLabel.setText("Les mots de passe ne correspondent pas");
+            return;
+        }
+
+
+        UserService userService = ServiceManager.getUserService();
+
+        UserProfile current = SessionManager.getCurrentUser();
+
+        try {
+            UserProfile updatedProfile = userService.updateProfile(
+                    current,
+                    username,
+                    newPassword
+            );
+
+            SessionManager.updateCurrentProfile(updatedProfile);
+        } catch (Exception e) {
+            errorLabel.setText(e.getMessage());
+            return;
+        }
+
 
         // Message de succès
         errorLabel.setForeground(new Color(76, 209, 55));
@@ -377,5 +385,16 @@ public class AccountManagementPanel extends JPanel {
             System.err.println("Impossible de charger l'image: " + path);
             return null;
         }
+    }
+
+    @Override
+    public void onLogin() {
+        // Charger les données
+        loadUserData();
+    }
+
+    @Override
+    public void onDisconnect() {
+
     }
 }

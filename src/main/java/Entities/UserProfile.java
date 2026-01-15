@@ -51,6 +51,14 @@ public class UserProfile {
         return passwordHash;
     }
 
+    public void setPasswordHash(String hash) {
+        this.passwordHash = hash;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
     public Set<Profile> getProfiles() {
         return profiles;
     }
