@@ -4,6 +4,7 @@
              xsi:schemaLocation="https://jakarta.ee/xml/ns/persistence https://jakarta.ee/xml/ns/persistence/persistence_3_2.xsd"
              version="3.2">
 
+    <!-- UNITE DE PERSISTENCE DE "PRODUCTION" !-->
     <persistence-unit name="secur2i">
 
         <class>Entities.UserProfile</class>
@@ -22,6 +23,7 @@
 
     </persistence-unit>
 
+    <!-- UNITE DE PERSISTENCE DE "TEST" !-->
     <persistence-unit name="test_db">
 
         <class>Entities.UserProfile</class>
