@@ -358,7 +358,6 @@ public class RegisterPanel extends JPanel {
         timer.start();
     }
 
-    // TODO: PARLER AVEC MATHIEU DU FAIT QUE REGISTER DANS LA BACKEND TE LOGIN EN MM TEMPS
     private void handleBackToLogin() {
         errorLabel.setText(" ");
         errorLabel.setForeground(new Color(244, 67, 54)); // Réinitialiser la couleur rouge

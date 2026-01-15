@@ -37,11 +37,11 @@ public class MainFrame extends JFrame {
         // Ajouter les différentes pages
         contentPanel.add(new LoginPanel(this), "login");
         contentPanel.add(new RegisterPanel(this), "register");
-        contentPanel.add(new SecurityPanel(), "security");
         contentPanel.add(new PasswordGeneratorPanel(), "generator");
         contentPanel.add(new VaultPanel(), "vault");
         contentPanel.add(new SecurityScorePanel(), "securityscore");
-        contentPanel.add(new ProfilePanel(), "profile");
+        contentPanel.add(new CategoryManagementPanel(), "category");
+        contentPanel.add(new AccountManagementPanel(), "profile");
 
         mainContainer.add(contentPanel, BorderLayout.CENTER);
         add(mainContainer);
@@ -88,28 +88,4 @@ public class MainFrame extends JFrame {
     }
 
 
-}
-
-// ===================== Autres pages à implémenter =====================
-
-class SecurityPanel extends JPanel {
-    public SecurityPanel() {
-        setLayout(new BorderLayout());
-        setBackground(Color.WHITE);
-
-        JLabel label = new JLabel("PAGE SÉCURITÉ", SwingConstants.CENTER);
-        label.setFont(new Font("Arial", Font.BOLD, 32));
-        add(label, BorderLayout.CENTER);
-    }
-}
-
-class ProfilePanel extends JPanel {
-    public ProfilePanel() {
-        setLayout(new BorderLayout());
-        setBackground(Color.WHITE);
-
-        JLabel label = new JLabel("PROFIL", SwingConstants.CENTER);
-        label.setFont(new Font("Arial", Font.BOLD, 32));
-        add(label, BorderLayout.CENTER);
-    }
 }

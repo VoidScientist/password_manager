@@ -38,11 +38,10 @@ public class SideMenu extends JPanel {
 
         // Boutons du menu
         addMenuButton("Mots de passe", "vault");
-        addMenuButton("Sécurité", "security");
         addMenuButton("Score de sécurité", "securityscore");
         addMenuButton("Générateur", "generator");
-        addMenuButton("Gestion des comptes", "accounts");
-        addMenuButton("Profil", "profile");
+        addMenuButton("Gestion des catégories", "category");
+        addMenuButton("Gestion du compte", "profile");
 
         // Espace flexible en bas
         add(Box.createVerticalGlue());
