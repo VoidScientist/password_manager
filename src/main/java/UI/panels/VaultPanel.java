@@ -1,10 +1,13 @@
 package UI.panels;
 
+import Entities.Profile;
+import Entities.Category;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import Utilities.Security.Password.*;
 
 public class VaultPanel extends JPanel {
@@ -12,7 +15,7 @@ public class VaultPanel extends JPanel {
     private static final Color PURPLE_BG = new Color(88, 70, 150);
     private static final Color LIGHT_GRAY = new Color(240, 240, 240);
 
-    // Chemins des images pour le bouton œil
+    // Chemins des images pour le bouton oeil
     private static final String EYE_OPEN_PATH = "/images/eye-open.png";
     private static final String EYE_CLOSED_PATH = "/images/eye-closed.png";
 
@@ -25,7 +28,8 @@ public class VaultPanel extends JPanel {
     private JComboBox<String> nameFilter;
     private JTextField searchField;
 
-    private List<Account> accounts;
+    private List<Profile> profiles;  // Liste complète des profils
+    private List<Category> categories;  // Liste des catégories depuis le backend
 
     public VaultPanel() {
         setLayout(new BorderLayout());
@@ -47,7 +51,7 @@ public class VaultPanel extends JPanel {
         detailPanel = new JPanel();
         detailCardLayout = new CardLayout();
         detailPanel.setLayout(detailCardLayout);
-        detailPanel.setPreferredSize(new Dimension(400, 600));
+        detailPanel.setPreferredSize(new Dimension(400, 750));
         detailPanel.setVisible(false);
 
         JPanel emptyDetailPanel = new JPanel();
@@ -56,8 +60,9 @@ public class VaultPanel extends JPanel {
 
         add(detailPanel, BorderLayout.EAST);
 
-        loadAccounts();
-        displayAccounts();
+        loadCategories();
+        loadProfiles();
+        displayAllProfiles();
     }
 
     private JPanel createMainPanel() {
@@ -82,11 +87,18 @@ public class VaultPanel extends JPanel {
     }
 
     private JPanel createFilterPanel() {
-        JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 10));
-        panel.setBackground(Color.WHITE);
+        // Panel principal avec layout vertical
+        JPanel mainPanel = new JPanel();
+        mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.Y_AXIS));
+        mainPanel.setBackground(Color.WHITE);
+
+        // Ligne 1 : Filtres (Catégorie, Date, Nom)
+        JPanel filtersRow = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 10));
+        filtersRow.setBackground(Color.WHITE);
 
         JLabel categoryLabel = new JLabel("Catégorie");
-        categoryFilter = new JComboBox<>(new String[]{"Réseaux Sociaux", "Banking", "Email", "Autre"});
+        String[] categoryNames = getCategoryNames();
+        categoryFilter = new JComboBox<>(categoryNames);
         categoryFilter.setPreferredSize(new Dimension(150, 30));
         categoryFilter.setBackground(LIGHT_GRAY);
 
@@ -100,53 +112,207 @@ public class VaultPanel extends JPanel {
         nameFilter.setPreferredSize(new Dimension(100, 30));
         nameFilter.setBackground(LIGHT_GRAY);
 
-        searchField = new JTextField();
-        searchField.setPreferredSize(new Dimension(200, 30));
-        searchField.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(Color.LIGHT_GRAY),
-                BorderFactory.createEmptyBorder(5, 10, 5, 10)
+        filtersRow.add(categoryLabel);
+        filtersRow.add(categoryFilter);
+        filtersRow.add(dateLabel);
+        filtersRow.add(dateFilter);
+        filtersRow.add(nameLabel);
+        filtersRow.add(nameFilter);
+
+        // Ligne 2 : Barre de recherche
+        JPanel searchRow = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 5));
+        searchRow.setBackground(Color.WHITE);
+
+        searchField = createPlaceholderTextField("Rechercher un compte...", 400, 35);
+        searchField.addActionListener(e -> performSearch());
+
+        searchRow.add(searchField);
+
+        // Ajouter les deux lignes au panel principal
+        mainPanel.add(filtersRow);
+        mainPanel.add(searchRow);
+
+        return mainPanel;
+    }
+
+    /**
+     * Crée un JTextField avec un placeholder
+     */
+    private JTextField createPlaceholderTextField(String placeholder, int width, int height) {
+        JTextField textField = new JTextField();
+        textField.setPreferredSize(new Dimension(width, height));
+        textField.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(200, 200, 200), 1),
+                BorderFactory.createEmptyBorder(5, 15, 5, 15)
         ));
+        textField.setFont(new Font("Arial", Font.PLAIN, 14));
 
-        JButton searchButton = new JButton("🔍");
-        searchButton.setPreferredSize(new Dimension(40, 30));
-        searchButton.setFocusPainted(false);
+        // Ajouter le placeholder
+        textField.setForeground(Color.GRAY);
+        textField.setText(placeholder);
 
-        panel.add(categoryLabel);
-        panel.add(categoryFilter);
-        panel.add(dateLabel);
-        panel.add(dateFilter);
-        panel.add(nameLabel);
-        panel.add(nameFilter);
-        panel.add(searchField);
-        panel.add(searchButton);
+        textField.addFocusListener(new FocusAdapter() {
+            @Override
+            public void focusGained(FocusEvent e) {
+                if (textField.getText().equals(placeholder)) {
+                    textField.setText("");
+                    textField.setForeground(Color.BLACK);
+                }
+            }
 
-        return panel;
+            @Override
+            public void focusLost(FocusEvent e) {
+                if (textField.getText().isEmpty()) {
+                    textField.setForeground(Color.GRAY);
+                    textField.setText(placeholder);
+                }
+            }
+        });
+
+        return textField;
     }
 
-    private void loadAccounts() {
-        accounts = new ArrayList<>();
-        accounts.add(new Account("Instagram", "jean.jean@gmail.com", "jean.j", "••••••",
-                "motdepasse123", "instagram_icon.png", "Réseaux Sociaux", 4));
-        accounts.add(new Account("Facebook", "jean.jean@gmail.com", "jean.jean", "••••••",
-                "facebook2024", "facebook_icon.png", "Réseaux Sociaux", 3));
-        accounts.add(new Account("Gmail", "jean.jean@gmail.com", "jean.jean", "••••••",
-                "gmail@secure", "gmail_icon.png", "Email", 5));
+    /**
+     * Charge les catégories depuis le backend
+     * TODO: Appeler le service backend pour récupérer List<Category>
+     */
+    private void loadCategories() {
+        // TODO: Remplacer par l'appel backend
+
+        // Simulation temporaire
+        categories = new ArrayList<>();
+        categories.add(new Category("Réseaux Sociaux", "Comptes sociaux"));
+        categories.add(new Category("Banking", "Comptes bancaires"));
+        categories.add(new Category("Email", "Comptes email"));
+        categories.add(new Category("Shopping", "Sites de shopping"));
+        categories.add(new Category("Travail", "Comptes professionnels"));
+        categories.add(new Category("Autre", "Autres comptes"));
     }
 
-    private void displayAccounts() {
+    /**
+     * Récupère les noms des catégories pour la liste déroulante
+     */
+    private String[] getCategoryNames() {
+        if (categories == null || categories.isEmpty()) {
+            return new String[]{"Toutes"};
+        }
+
+        String[] names = new String[categories.size() + 1];
+        names[0] = "Toutes";
+        for (int i = 0; i < categories.size(); i++) {
+            names[i + 1] = categories.get(i).getName();
+        }
+        return names;
+    }
+
+    /**
+     * Récupère l'objet Category à partir de son nom
+     */
+    private Category getCategoryByName(String name) {
+        if (categories == null || name == null || name.isEmpty()) {
+            return null;
+        }
+
+        for (Category category : categories) {
+            if (category.getName().equals(name)) {
+                return category;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Charge les profils depuis le backend
+     * TODO: Appeler le service backend pour récupérer Set<Profile>
+     */
+    private void loadProfiles() {
+        // TODO: Remplacer par l'appel backend
+        // Set<Profile> profilesFromBackend = userProfile.getProfiles();
+        // profiles = new ArrayList<>(profilesFromBackend);
+
+        // Simulation temporaire avec des données en dur
+        profiles = new ArrayList<>();
+        Profile p1 = new Profile("Instagram", "jean.j", "MotDePasse123!", "https://instagram.com");
+        Profile p2 = new Profile("Facebook", "jean.jean", "Azerty456!", "https://facebook.com");
+        Profile p3 = new Profile("Gmail", "jean.jean@gmail.com", "Gmail789!", "https://gmail.com");
+
+        profiles.add(p1);
+        profiles.add(p2);
+        profiles.add(p3);
+    }
+
+    /**
+     * Effectue la recherche et affiche les résultats
+     */
+    private void performSearch() {
+        String searchQuery = searchField.getText().trim();
+
+        // Ignorer si c'est le placeholder
+        if (searchQuery.isEmpty() || searchQuery.equals("Rechercher un compte...")) {
+            displayAllProfiles();
+            return;
+        }
+
+        // TODO: Appel backend pour rechercher
+        // List<Profile> searchResults = profileService.search(searchQuery);
+        // displayProfiles(searchResults);
+
+        // Simulation temporaire (filtrage local)
+        System.out.println("Recherche : " + searchQuery);
+
+        List<Profile> filteredProfiles = new ArrayList<>();
+        for (Profile profile : profiles) {
+            // Recherche dans service, username, ou URL
+            if (profile.getService().toLowerCase().contains(searchQuery.toLowerCase()) ||
+                    profile.getUsername().toLowerCase().contains(searchQuery.toLowerCase()) ||
+                    (profile.getUrl() != null && profile.getUrl().toLowerCase().contains(searchQuery.toLowerCase()))) {
+                filteredProfiles.add(profile);
+            }
+        }
+
+        // Afficher les résultats filtrés
+        displayProfiles(filteredProfiles);
+    }
+
+    /**
+     * Affiche tous les profils
+     */
+    private void displayAllProfiles() {
+        displayProfiles(profiles);
+    }
+
+    /**
+     * Rafraîchit l'affichage avec une liste de profils donnée
+     * IMPORTANT : Réutilise createAccountCard() pour chaque profil
+     *
+     * @param profilesToDisplay Liste des profils à afficher (tous ou filtrés)
+     */
+    private void displayProfiles(List<Profile> profilesToDisplay) {
         accountListPanel.removeAll();
 
-        for (Account account : accounts) {
-            JPanel accountCard = createAccountCard(account);
-            accountListPanel.add(accountCard);
-            accountListPanel.add(Box.createRigidArea(new Dimension(0, 10)));
+        if (profilesToDisplay.isEmpty()) {
+            // Message si aucun profil
+            JLabel noResultLabel = new JLabel("Aucun compte trouvé");
+            noResultLabel.setFont(new Font("Arial", Font.PLAIN, 14));
+            noResultLabel.setForeground(Color.GRAY);
+            noResultLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+            accountListPanel.add(Box.createVerticalGlue());
+            accountListPanel.add(noResultLabel);
+            accountListPanel.add(Box.createVerticalGlue());
+        } else {
+            // Réutilisation de createAccountCard() pour chaque profil
+            for (Profile profile : profilesToDisplay) {
+                JPanel accountCard = createAccountCard(profile);
+                accountListPanel.add(accountCard);
+                accountListPanel.add(Box.createRigidArea(new Dimension(0, 10)));
+            }
         }
 
         accountListPanel.revalidate();
         accountListPanel.repaint();
     }
 
-    private JPanel createAccountCard(Account account) {
+    private JPanel createAccountCard(Profile profile) {
         JPanel card = new JPanel(new BorderLayout(15, 0));
         card.setBackground(Color.WHITE);
         card.setBorder(BorderFactory.createCompoundBorder(
@@ -156,25 +322,30 @@ public class VaultPanel extends JPanel {
         card.setMaximumSize(new Dimension(Integer.MAX_VALUE, 80));
         card.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
+        // Icône du service (toujours violet)
         JLabel iconLabel = new JLabel();
         iconLabel.setPreferredSize(new Dimension(50, 50));
         iconLabel.setOpaque(true);
-        iconLabel.setBackground(getColorForService(account.serviceName));
+        iconLabel.setBackground(PURPLE_BG);
         iconLabel.setHorizontalAlignment(SwingConstants.CENTER);
         iconLabel.setVerticalAlignment(SwingConstants.CENTER);
         iconLabel.setFont(new Font("Arial", Font.BOLD, 24));
-        iconLabel.setText(account.serviceName.substring(0, 1));
+        String iconText = profile.getService() != null && !profile.getService().isEmpty()
+                ? profile.getService().substring(0, 1).toUpperCase()
+                : "?";
+        iconLabel.setText(iconText);
         iconLabel.setForeground(Color.WHITE);
         card.add(iconLabel, BorderLayout.WEST);
 
+        // Panel d'informations
         JPanel infoPanel = new JPanel();
         infoPanel.setLayout(new BoxLayout(infoPanel, BoxLayout.Y_AXIS));
         infoPanel.setBackground(Color.WHITE);
 
-        JLabel serviceLabel = new JLabel(account.serviceName);
+        JLabel serviceLabel = new JLabel(profile.getService());
         serviceLabel.setFont(new Font("Arial", Font.BOLD, 16));
 
-        JLabel emailLabel = new JLabel(account.email);
+        JLabel emailLabel = new JLabel(profile.getUsername());
         emailLabel.setFont(new Font("Arial", Font.PLAIN, 12));
         emailLabel.setForeground(Color.GRAY);
 
@@ -183,13 +354,14 @@ public class VaultPanel extends JPanel {
         infoPanel.add(emailLabel);
         card.add(infoPanel, BorderLayout.CENTER);
 
+        // Panel des identifiants
         JPanel credentialsPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 15, 0));
         credentialsPanel.setBackground(Color.WHITE);
 
-        JLabel loginLabel = new JLabel(account.login);
+        JLabel loginLabel = new JLabel(profile.getUsername());
         loginLabel.setFont(new Font("Arial", Font.PLAIN, 14));
 
-        JLabel passwordLabel = new JLabel(account.maskedPassword);
+        JLabel passwordLabel = new JLabel("......");
         passwordLabel.setFont(new Font("Arial", Font.BOLD, 14));
 
         JButton eyeButton = new JButton();
@@ -199,21 +371,17 @@ public class VaultPanel extends JPanel {
         eyeButton.setContentAreaFilled(false);
         eyeButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
-        // Charger les images
         ImageIcon eyeOpenIcon = loadIcon(EYE_OPEN_PATH, 20, 20);
         ImageIcon eyeClosedIcon = loadIcon(EYE_CLOSED_PATH, 20, 20);
 
-        // Utiliser directement les images (par défaut, mot de passe masqué = icône œil fermé)
         eyeButton.setIcon(eyeClosedIcon);
 
         eyeButton.addActionListener(e -> {
             if (eyeButton.getIcon() == eyeClosedIcon) {
-                // Actuellement masqué, on affiche
-                passwordLabel.setText(account.realPassword != null ? account.realPassword : account.maskedPassword);
+                passwordLabel.setText(profile.getPassword());
                 eyeButton.setIcon(eyeOpenIcon);
             } else {
-                // Actuellement visible, on masque
-                passwordLabel.setText("••••••");
+                passwordLabel.setText("......");
                 eyeButton.setIcon(eyeClosedIcon);
             }
         });
@@ -223,10 +391,11 @@ public class VaultPanel extends JPanel {
         credentialsPanel.add(eyeButton);
         card.add(credentialsPanel, BorderLayout.EAST);
 
+        // Listeners pour les interactions
         card.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                showAccountDetails(account);
+                showAccountDetails(profile);
             }
 
             @Override
@@ -288,9 +457,9 @@ public class VaultPanel extends JPanel {
     }
 
     private void showNewAccountPanel() {
-        String panelName = "new_account";
-        Account emptyAccount = new Account("Nouveau compte", "", "", "", "", "", "Autre", 0);
-        JPanel newAccountPanel = createDetailsPanel(emptyAccount);
+        String panelName = "new_profile";
+        Profile newProfile = new Profile("", "", "", "");
+        JPanel newAccountPanel = createDetailsPanel(newProfile, true);
         detailPanel.add(newAccountPanel, panelName);
 
         detailPanel.setVisible(true);
@@ -300,10 +469,10 @@ public class VaultPanel extends JPanel {
         repaint();
     }
 
-    private void showAccountDetails(Account account) {
-        String panelName = "details_" + account.serviceName;
+    private void showAccountDetails(Profile profile) {
+        String panelName = "details_" + profile.getService();
 
-        JPanel detailsPanel = createDetailsPanel(account);
+        JPanel detailsPanel = createDetailsPanel(profile, false);
         detailPanel.add(detailsPanel, panelName);
 
         detailPanel.setVisible(true);
@@ -313,17 +482,18 @@ public class VaultPanel extends JPanel {
         repaint();
     }
 
-    private JPanel createDetailsPanel(Account account) {
+    private JPanel createDetailsPanel(Profile profile, boolean isNew) {
         JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
         panel.setBackground(LIGHT_GRAY);
         panel.setBorder(BorderFactory.createEmptyBorder(5, 25, 15, 25));
 
+        // Header avec bouton fermer
         JPanel headerPanel = new JPanel(new BorderLayout());
         headerPanel.setBackground(LIGHT_GRAY);
         headerPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 30));
 
-        JButton closeButton = new JButton("✕");
+        JButton closeButton = new JButton("X");
         closeButton.setFont(new Font("Arial", Font.BOLD, 16));
         closeButton.setBorderPainted(false);
         closeButton.setContentAreaFilled(false);
@@ -337,227 +507,299 @@ public class VaultPanel extends JPanel {
         headerPanel.add(closeButton, BorderLayout.EAST);
 
         panel.add(headerPanel);
-        panel.add(Box.createRigidArea(new Dimension(0, 5)));
+        panel.add(Box.createRigidArea(new Dimension(0, 3)));
 
+        // Icône du service
         JLabel serviceIcon = new JLabel();
-        serviceIcon.setPreferredSize(new Dimension(80, 80));
-        serviceIcon.setMaximumSize(new Dimension(80, 80));
-        serviceIcon.setMinimumSize(new Dimension(80, 80));
+        serviceIcon.setPreferredSize(new Dimension(70, 70));
+        serviceIcon.setMaximumSize(new Dimension(70, 70));
+        serviceIcon.setMinimumSize(new Dimension(70, 70));
         serviceIcon.setOpaque(true);
-        serviceIcon.setBackground(getColorForService(account.serviceName));
+        serviceIcon.setBackground(PURPLE_BG);
         serviceIcon.setHorizontalAlignment(SwingConstants.CENTER);
         serviceIcon.setVerticalAlignment(SwingConstants.CENTER);
-        serviceIcon.setFont(new Font("Arial", Font.BOLD, 40));
-        serviceIcon.setText(account.serviceName.substring(0, 1));
+        serviceIcon.setFont(new Font("Arial", Font.BOLD, 36));
+        String initialIconText = profile.getService() != null && !profile.getService().isEmpty()
+                ? profile.getService().substring(0, 1).toUpperCase()
+                : "?";
+        serviceIcon.setText(initialIconText);
         serviceIcon.setForeground(Color.WHITE);
         serviceIcon.setAlignmentX(Component.CENTER_ALIGNMENT);
         panel.add(serviceIcon);
-        panel.add(Box.createRigidArea(new Dimension(0, 12)));
+        panel.add(Box.createRigidArea(new Dimension(0, 8)));
 
-        JLabel serviceName = createEditableLabel(account.serviceName, 22, true);
-        serviceName.setAlignmentX(Component.CENTER_ALIGNMENT);
-        panel.add(serviceName);
-        panel.add(Box.createRigidArea(new Dimension(0, 25)));
+        // Nom du service
+        JTextField serviceNameField = new JTextField(profile.getService());
+        serviceNameField.setFont(new Font("Arial", Font.BOLD, 20));
+        serviceNameField.setHorizontalAlignment(JTextField.CENTER);
+        serviceNameField.setMaximumSize(new Dimension(Integer.MAX_VALUE, 32));
+        serviceNameField.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        panel.add(createDetailField("Login", account.login));
-        panel.add(Box.createRigidArea(new Dimension(0, 12)));
+        serviceNameField.getDocument().addDocumentListener(new javax.swing.event.DocumentListener() {
+            public void changedUpdate(javax.swing.event.DocumentEvent e) { updateIcon(); }
+            public void removeUpdate(javax.swing.event.DocumentEvent e) { updateIcon(); }
+            public void insertUpdate(javax.swing.event.DocumentEvent e) { updateIcon(); }
 
-        panel.add(createDetailField("Email", account.email));
-        panel.add(Box.createRigidArea(new Dimension(0, 12)));
+            private void updateIcon() {
+                String text = serviceNameField.getText();
+                if (!text.isEmpty()) {
+                    serviceIcon.setText(text.substring(0, 1).toUpperCase());
+                } else {
+                    serviceIcon.setText("?");
+                }
+            }
+        });
 
+        panel.add(serviceNameField);
+        panel.add(Box.createRigidArea(new Dimension(0, 15)));
+
+        // Champ Login
+        JTextField loginField = new JTextField(profile.getUsername());
+        JPanel loginPanel = createDetailField("Login", loginField);
+        panel.add(loginPanel);
+        panel.add(Box.createRigidArea(new Dimension(0, 8)));
+
+        // Champ Email
+        JTextField emailField = new JTextField(profile.getUsername());
+        JPanel emailPanel = createDetailField("Email", emailField);
+        panel.add(emailPanel);
+        panel.add(Box.createRigidArea(new Dimension(0, 8)));
+
+        // Barre de force du mot de passe
         JPanel strengthPanel = createStrengthBar(0);
         strengthPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        String initialPassword = account.email.isEmpty() ? "" : "motdepassedejean";
-        panel.add(createDetailPasswordFieldWithStrengthUpdate("Mot de passe", initialPassword, strengthPanel));
-        panel.add(Box.createRigidArea(new Dimension(0, 8)));
+        String initialPassword = isNew ? "" : profile.getPassword();
+        JPasswordField passwordField = new JPasswordField(initialPassword);
+        JPanel passwordPanel = createDetailPasswordFieldWithStrengthUpdate("Mot de passe", passwordField, strengthPanel);
+        panel.add(passwordPanel);
+        panel.add(Box.createRigidArea(new Dimension(0, 6)));
 
         panel.add(strengthPanel);
-        panel.add(Box.createRigidArea(new Dimension(0, 12)));
+        panel.add(Box.createRigidArea(new Dimension(0, 8)));
 
-        String urlValue = account.email.isEmpty() ? "" : "https://www.facebook.com/?locale=fr_FR";
-        panel.add(createDetailField("URL", urlValue));
-        panel.add(Box.createRigidArea(new Dimension(0, 12)));
+        // Champ URL
+        String urlValue = profile.getUrl() != null ? profile.getUrl() : "";
+        JTextField urlField = new JTextField(urlValue);
+        JPanel urlPanel = createDetailField("URL", urlField);
+        panel.add(urlPanel);
+        panel.add(Box.createRigidArea(new Dimension(0, 8)));
 
-        panel.add(createCategoryField("Catégorie", account.category));
-        panel.add(Box.createRigidArea(new Dimension(0, 12)));
+        // Champ Catégorie
+        String categoryName = profile.getCategory() != null ? profile.getCategory().getName() : "Autre";
+        String[] categoryNames = getCategoryNames();
+        String[] formCategoryNames = new String[categoryNames.length - 1];
+        System.arraycopy(categoryNames, 1, formCategoryNames, 0, formCategoryNames.length);
 
-        panel.add(Box.createVerticalGlue());
+        JComboBox<String> categoryCombo = new JComboBox<>(formCategoryNames);
+        categoryCombo.setSelectedItem(categoryName);
+        JPanel categoryPanel = createCategoryField("Catégorie", categoryCombo);
+        panel.add(categoryPanel);
+        panel.add(Box.createRigidArea(new Dimension(0, 8)));
 
-        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 0));
+        // Label d'erreur
+        JLabel errorLabel = new JLabel(" ");
+        errorLabel.setFont(new Font("Arial", Font.PLAIN, 11));
+        errorLabel.setForeground(new Color(244, 67, 54));
+        errorLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        panel.add(errorLabel);
+        panel.add(Box.createRigidArea(new Dimension(0, 8)));
+
+        // Boutons
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 8, 0));
         buttonPanel.setBackground(LIGHT_GRAY);
         buttonPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 45));
 
         JButton saveButton = createRoundedButton("Sauvegarder", new Color(40, 167, 69));
+        saveButton.setPreferredSize(new Dimension(105, 32));
         saveButton.addActionListener(e -> {
-            JOptionPane.showMessageDialog(this, "Modifications sauvegardées!");
-        });
+            String newService = serviceNameField.getText().trim();
+            String newLogin = loginField.getText().trim();
+            String newEmail = emailField.getText().trim();
+            String newPassword = new String(passwordField.getPassword());
+            String newUrl = urlField.getText().trim();
+            String newCategoryName = (String) categoryCombo.getSelectedItem();
 
-        JButton cancelButton = createRoundedButton("Annuler", new Color(220, 53, 69));
+            errorLabel.setText(" ");
+
+            if (newService.isEmpty()) {
+                errorLabel.setText("Le nom du service ne peut pas être vide");
+                return;
+            }
+
+            if (newLogin.isEmpty()) {
+                errorLabel.setText("Le login ne peut pas être vide");
+                return;
+            }
+
+            if (newPassword.isEmpty()) {
+                errorLabel.setText("Le mot de passe ne peut pas être vide");
+                return;
+            }
+
+            // Récupérer l'objet Category correspondant
+            Category selectedCategory = getCategoryByName(newCategoryName);
+
+            if (isNew) {
+                Profile newProfile = new Profile(newService, newLogin, newPassword, newUrl);
+                newProfile.setCategory(selectedCategory);
+                // TODO: Ajouter via backend
+                // Profile savedProfile = profileService.create(newProfile);
+                System.out.println("Ajout du profil: " + newService + " (Catégorie: " +
+                        (selectedCategory != null ? selectedCategory.getName() : "null") + ")");
+
+                profiles.add(newProfile);
+            } else {
+                // TODO: Modifier via backend
+                // profileService.update(profile.getId(), newService, newLogin, newPassword, newUrl, selectedCategory);
+                System.out.println("Modification du profil: " + profile.getService() + " -> " + newService +
+                        " (Catégorie: " + (selectedCategory != null ? selectedCategory.getName() : "null") + ")");
+
+                profile.setService(newService);
+                profile.setUsername(newLogin);
+                profile.setPassword(newPassword);
+                profile.setUrl(newUrl);
+                profile.setCategory(selectedCategory);
+            }
+
+            String searchQuery = searchField.getText().trim();
+            if (searchQuery.isEmpty() || searchQuery.equals("Rechercher un compte...")) {
+                displayAllProfiles();
+            } else {
+                performSearch();
+            }
+
+            detailPanel.setVisible(false);
+            revalidate();
+            repaint();
+        });
+        buttonPanel.add(saveButton);
+
+        if (!isNew) {
+            JButton deleteButton = createRoundedButton("Supprimer", new Color(220, 53, 69));
+            deleteButton.setPreferredSize(new Dimension(105, 32));
+            deleteButton.addActionListener(e -> handleDeleteProfile(profile));
+            buttonPanel.add(deleteButton);
+        }
+
+        JButton cancelButton = createRoundedButton("Annuler", new Color(108, 117, 125));
+        cancelButton.setPreferredSize(new Dimension(105, 32));
         cancelButton.addActionListener(e -> {
             detailPanel.setVisible(false);
             revalidate();
             repaint();
         });
-
-        buttonPanel.add(saveButton);
         buttonPanel.add(cancelButton);
+
         panel.add(buttonPanel);
 
         return panel;
     }
 
-    private JLabel createEditableLabel(String text, int fontSize, boolean bold) {
-        JLabel label = new JLabel(text);
-        label.setFont(new Font("Arial", bold ? Font.BOLD : Font.PLAIN, fontSize));
-        label.setCursor(new Cursor(Cursor.TEXT_CURSOR));
+    private void handleDeleteProfile(Profile profile) {
+        int confirm = JOptionPane.showConfirmDialog(
+                this,
+                "Etes-vous sur de vouloir supprimer le compte \"" + profile.getService() + "\" ?\n" +
+                        "Cette action est irreversible.",
+                "Confirmation de suppression",
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.WARNING_MESSAGE
+        );
 
-        label.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                Container parent = label.getParent();
-                int index = getComponentIndex(parent, label);
+        if (confirm == JOptionPane.YES_OPTION) {
+            // TODO: Supprimer via backend
+            // profileService.delete(profile.getId());
+            System.out.println("Suppression du profil: " + profile.getService());
 
-                JTextField textField = new JTextField(label.getText());
-                textField.setFont(label.getFont());
-                textField.setHorizontalAlignment(JTextField.CENTER);
-                textField.setMaximumSize(new Dimension(Integer.MAX_VALUE, 35));
-                textField.setAlignmentX(Component.CENTER_ALIGNMENT);
+            profiles.remove(profile);
 
-                parent.remove(label);
-                parent.add(textField, index);
-                parent.revalidate();
-                parent.repaint();
-
-                textField.requestFocus();
-                textField.selectAll();
-
-                textField.addActionListener(ae -> {
-                    label.setText(textField.getText());
-                    parent.remove(textField);
-                    parent.add(label, index);
-                    parent.revalidate();
-                    parent.repaint();
-                });
-
-                textField.addKeyListener(new KeyAdapter() {
-                    @Override
-                    public void keyPressed(KeyEvent ke) {
-                        if (ke.getKeyCode() == KeyEvent.VK_ESCAPE) {
-                            parent.remove(textField);
-                            parent.add(label, index);
-                            parent.revalidate();
-                            parent.repaint();
-                        }
-                    }
-                });
-
-                textField.addFocusListener(new FocusAdapter() {
-                    @Override
-                    public void focusLost(FocusEvent fe) {
-                        label.setText(textField.getText());
-                        parent.remove(textField);
-                        parent.add(label, index);
-                        parent.revalidate();
-                        parent.repaint();
-                    }
-                });
+            String searchQuery = searchField.getText().trim();
+            if (searchQuery.isEmpty() || searchQuery.equals("Rechercher un compte...")) {
+                displayAllProfiles();
+            } else {
+                performSearch();
             }
-        });
 
-        return label;
-    }
-
-    private int getComponentIndex(Container parent, Component component) {
-        Component[] components = parent.getComponents();
-        for (int i = 0; i < components.length; i++) {
-            if (components[i] == component) {
-                return i;
-            }
+            detailPanel.setVisible(false);
+            revalidate();
+            repaint();
         }
-        return -1;
     }
 
-    private JPanel createCategoryField(String label, String selectedCategory) {
+    private JPanel createCategoryField(String label, JComboBox<String> categoryCombo) {
         JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
         panel.setBackground(LIGHT_GRAY);
-        panel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 60));
+        panel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 55));
         panel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         JLabel fieldLabel = new JLabel(label);
-        fieldLabel.setFont(new Font("Arial", Font.PLAIN, 12));
+        fieldLabel.setFont(new Font("Arial", Font.PLAIN, 11));
         fieldLabel.setForeground(Color.GRAY);
         fieldLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        String[] categories = {"Réseaux Sociaux", "Banking", "Email", "Shopping", "Travail", "Autre"};
-        JComboBox<String> categoryCombo = new JComboBox<>(categories);
-        categoryCombo.setSelectedItem(selectedCategory);
-        categoryCombo.setMaximumSize(new Dimension(Integer.MAX_VALUE, 35));
+        categoryCombo.setMaximumSize(new Dimension(Integer.MAX_VALUE, 32));
         categoryCombo.setBackground(Color.WHITE);
-        categoryCombo.setFont(new Font("Arial", Font.PLAIN, 13));
+        categoryCombo.setFont(new Font("Arial", Font.PLAIN, 12));
 
         panel.add(fieldLabel);
-        panel.add(Box.createRigidArea(new Dimension(0, 5)));
+        panel.add(Box.createRigidArea(new Dimension(0, 4)));
         panel.add(categoryCombo);
 
         return panel;
     }
 
-    private JPanel createDetailField(String label, String value) {
+    private JPanel createDetailField(String label, JTextField textField) {
         JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
         panel.setBackground(LIGHT_GRAY);
-        panel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 60));
+        panel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 55));
         panel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         JLabel fieldLabel = new JLabel(label);
-        fieldLabel.setFont(new Font("Arial", Font.PLAIN, 12));
+        fieldLabel.setFont(new Font("Arial", Font.PLAIN, 11));
         fieldLabel.setForeground(Color.GRAY);
         fieldLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        JTextField textField = new JTextField(value);
-        textField.setFont(new Font("Arial", Font.PLAIN, 13));
-        textField.setMaximumSize(new Dimension(Integer.MAX_VALUE, 35));
+        textField.setFont(new Font("Arial", Font.PLAIN, 12));
+        textField.setMaximumSize(new Dimension(Integer.MAX_VALUE, 32));
         textField.setBackground(Color.WHITE);
         textField.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(new Color(200, 200, 200)),
-                BorderFactory.createEmptyBorder(6, 10, 6, 10)
+                BorderFactory.createEmptyBorder(5, 10, 5, 10)
         ));
 
         panel.add(fieldLabel);
-        panel.add(Box.createRigidArea(new Dimension(0, 5)));
+        panel.add(Box.createRigidArea(new Dimension(0, 4)));
         panel.add(textField);
 
         return panel;
     }
 
-    private JPanel createDetailPasswordFieldWithStrengthUpdate(String label, String initialPassword, JPanel strengthBarPanel) {
+    private JPanel createDetailPasswordFieldWithStrengthUpdate(String label, JPasswordField passwordField, JPanel strengthBarPanel) {
         JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
         panel.setBackground(LIGHT_GRAY);
-        panel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 60));
+        panel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 55));
         panel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         JLabel fieldLabel = new JLabel(label);
-        fieldLabel.setFont(new Font("Arial", Font.PLAIN, 12));
+        fieldLabel.setFont(new Font("Arial", Font.PLAIN, 11));
         fieldLabel.setForeground(Color.GRAY);
         fieldLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         JPanel passwordPanel = new JPanel(new BorderLayout());
-        passwordPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 35));
+        passwordPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 32));
         passwordPanel.setBackground(Color.WHITE);
         passwordPanel.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(new Color(200, 200, 200)),
-                BorderFactory.createEmptyBorder(6, 10, 6, 10)
+                BorderFactory.createEmptyBorder(5, 10, 5, 10)
         ));
 
-        JPasswordField passwordField = new JPasswordField(initialPassword);
-        passwordField.setFont(new Font("Arial", Font.PLAIN, 13));
+        passwordField.setFont(new Font("Arial", Font.PLAIN, 12));
         passwordField.setBackground(Color.WHITE);
         passwordField.setBorder(BorderFactory.createEmptyBorder());
 
-        // Calculer la force initiale
         SwingUtilities.invokeLater(() -> {
             String pwd = new String(passwordField.getPassword());
             if (!pwd.isEmpty()) {
@@ -602,20 +844,16 @@ public class VaultPanel extends JPanel {
         eyeButton.setContentAreaFilled(false);
         eyeButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
-        // Charger les images
-        ImageIcon eyeOpenIcon = loadIcon(EYE_OPEN_PATH, 20, 20);
-        ImageIcon eyeClosedIcon = loadIcon(EYE_CLOSED_PATH, 20, 20);
+        ImageIcon eyeOpenIcon = loadIcon(EYE_OPEN_PATH, 18, 18);
+        ImageIcon eyeClosedIcon = loadIcon(EYE_CLOSED_PATH, 18, 18);
 
-        // Utiliser directement les images (par défaut, mot de passe masqué = icône œil fermé)
         eyeButton.setIcon(eyeClosedIcon);
 
         eyeButton.addActionListener(e -> {
             if (passwordField.getEchoChar() == (char) 0) {
-                // Masquer le mot de passe
-                passwordField.setEchoChar('•');
+                passwordField.setEchoChar('\u2022');
                 eyeButton.setIcon(eyeClosedIcon);
             } else {
-                // Afficher le mot de passe
                 passwordField.setEchoChar((char) 0);
                 eyeButton.setIcon(eyeOpenIcon);
             }
@@ -623,7 +861,7 @@ public class VaultPanel extends JPanel {
         passwordPanel.add(eyeButton, BorderLayout.EAST);
 
         panel.add(fieldLabel);
-        panel.add(Box.createRigidArea(new Dimension(0, 5)));
+        panel.add(Box.createRigidArea(new Dimension(0, 4)));
         panel.add(passwordPanel);
 
         return panel;
@@ -634,11 +872,11 @@ public class VaultPanel extends JPanel {
 
         Color[] colors = {
                 Color.LIGHT_GRAY,
-                new Color(220, 53, 69),   // Rouge
-                new Color(253, 126, 20),  // Orange
-                new Color(255, 193, 7),   // Jaune
-                new Color(40, 167, 69),   // Vert
-                new Color(25, 135, 84)    // Vert foncé
+                new Color(220, 53, 69),
+                new Color(253, 126, 20),
+                new Color(255, 193, 7),
+                new Color(40, 167, 69),
+                new Color(25, 135, 84)
         };
 
         level = Math.max(0, Math.min(5, level));
@@ -656,12 +894,12 @@ public class VaultPanel extends JPanel {
     }
 
     private JPanel createStrengthBar(int strength) {
-        JPanel panel = new JPanel(new FlowLayout(FlowLayout.CENTER, 3, 0));
+        JPanel panel = new JPanel(new FlowLayout(FlowLayout.CENTER, 2, 0));
         panel.setBackground(LIGHT_GRAY);
-        panel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 20));
+        panel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 18));
 
         for (int i = 0; i < 5; i++) {
-            JLabel bar = new JLabel("     ");
+            JLabel bar = new JLabel("    ");
             bar.setOpaque(true);
             bar.setBackground(Color.LIGHT_GRAY);
             bar.setBorder(BorderFactory.createLineBorder(Color.GRAY));
@@ -673,33 +911,22 @@ public class VaultPanel extends JPanel {
 
     private JButton createRoundedButton(String text, Color bgColor) {
         JButton button = new JButton(text);
-        button.setFont(new Font("Arial", Font.BOLD, 12));
+        button.setFont(new Font("Arial", Font.BOLD, 11));
         button.setForeground(Color.WHITE);
         button.setBackground(bgColor);
         button.setFocusPainted(false);
         button.setBorderPainted(false);
-        button.setPreferredSize(new Dimension(110, 35));
+        button.setPreferredSize(new Dimension(105, 32));
         button.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        button.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseEntered(java.awt.event.MouseEvent evt) {
+        button.addMouseListener(new MouseAdapter() {
+            public void mouseEntered(MouseEvent evt) {
                 button.setBackground(bgColor.brighter());
             }
-            public void mouseExited(java.awt.event.MouseEvent evt) {
+            public void mouseExited(MouseEvent evt) {
                 button.setBackground(bgColor);
             }
         });
         return button;
-    }
-
-    private Color getColorForService(String serviceName) {
-        switch (serviceName.toLowerCase()) {
-            case "instagram": return new Color(225, 48, 108);
-            case "facebook": return new Color(66, 103, 178);
-            case "gmail": return new Color(234, 67, 53);
-            case "twitter": return new Color(29, 161, 242);
-            case "linkedin": return new Color(0, 119, 181);
-            default: return PURPLE_BG;
-        }
     }
 
     private ImageIcon loadIcon(String path, int width, int height) {
@@ -710,40 +937,6 @@ public class VaultPanel extends JPanel {
         } catch (Exception e) {
             System.err.println("Impossible de charger l'image: " + path);
             return null;
-        }
-    }
-
-    private static class Account {
-        String serviceName;
-        String email;
-        String login;
-        String maskedPassword;
-        String realPassword;
-        String iconPath;
-        String category;
-        int strength;
-
-        public Account(String serviceName, String email, String login, String maskedPassword,
-                       String iconPath, String category, int strength) {
-            this.serviceName = serviceName;
-            this.email = email;
-            this.login = login;
-            this.maskedPassword = maskedPassword;
-            this.iconPath = iconPath;
-            this.category = category;
-            this.strength = strength;
-        }
-
-        public Account(String serviceName, String email, String login, String maskedPassword,
-                       String realPassword, String iconPath, String category, int strength) {
-            this.serviceName = serviceName;
-            this.email = email;
-            this.login = login;
-            this.maskedPassword = maskedPassword;
-            this.realPassword = realPassword;
-            this.iconPath = iconPath;
-            this.category = category;
-            this.strength = strength;
         }
     }
 }
