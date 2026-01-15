@@ -1,5 +1,7 @@
 package UI.panels;
 
+import Entities.Profile;
+import Entities.UserProfile;
 import Utilities.Security.Password.*;
 
 import javax.swing.*;
@@ -20,18 +22,18 @@ public class SecurityScorePanel extends JPanel {
     private int globalScore = 0;
     private List<SecurityWarning> warnings = new ArrayList<>();
 
-    // Simulation de données (à remplacer par vraies données BDD)
-    private List<PasswordEntry> passwordEntries = new ArrayList<>();
+    private UserProfile userProfile;  // Profil utilisateur contenant tous les profils
+    private List<Profile> profiles = new ArrayList<>();  // Liste des profils à analyser
 
     public SecurityScorePanel() {
         setLayout(new BorderLayout());
         setBackground(Color.WHITE);
 
-        // Charger le dictionnaire
+        // Charger le dictionnaire des mots de passe faibles
         WeakPasswordDictionary.load();
 
-        // Charger les données (simulation)
-        loadPasswordData();
+        // Charger les données depuis le backend
+        loadProfilesFromBackend();
 
         // Calculer le score et les warnings
         calculateSecurityScore();
@@ -79,39 +81,52 @@ public class SecurityScorePanel extends JPanel {
         add(mainPanel);
     }
 
-    private void loadPasswordData() {
-        // Simulation de données - À remplacer par les vraies données de la BDD
-        passwordEntries.add(new PasswordEntry("Instagram", "azazafa586"));
-        passwordEntries.add(new PasswordEntry("Facebook", "motdepasse123")); // Doublon !
-        passwordEntries.add(new PasswordEntry("Gmail", "mom20"));
-        passwordEntries.add(new PasswordEntry("Twitter", "#6K!_ucrojwm%vSGE0=A"));
-        passwordEntries.add(new PasswordEntry("LinkedIn", "P@ssw0rd!2024"));
-        passwordEntries.add(new PasswordEntry("Amazon", "uq70}^pSdjvb*2LTJ*:M"));
+    private void loadProfilesFromBackend() {
+        // TODO: Remplacer par l'appel backend pour récupérer le UserProfile
+        // Simulation temporaire
+        profiles = new ArrayList<>();
+
+        Profile p1 = new Profile("Instagram", "jean.j", "azazafa586", "https://instagram.com");
+        Profile p2 = new Profile("Facebook", "jean.jean", "motdepasse123", "https://facebook.com");
+        Profile p3 = new Profile("Gmail", "jean.jean@gmail.com", "mom20", "https://gmail.com");
+        Profile p4 = new Profile("Twitter", "jean_twitter", "#6K!_ucrojwm%vSGE0=A", "https://twitter.com");
+        Profile p5 = new Profile("LinkedIn", "jean.j", "P@ssw0rd!2024", "https://linkedin.com");
+        Profile p6 = new Profile("Amazon", "jean.j", "uq70}^pSdjvb*2LTJ*:M", "https://amazon.com");
+
+        profiles.add(p1);
+        profiles.add(p2);
+        profiles.add(p3);
+        profiles.add(p4);
+        profiles.add(p5);
+        profiles.add(p6);
     }
 
     private void calculateSecurityScore() {
         warnings.clear();
         int totalScore = 100;
-        int passwordCount = passwordEntries.size();
+        int passwordCount = profiles.size();
 
         if (passwordCount == 0) {
             globalScore = 0;
             return;
         }
 
-        // 1. Analyser la robustesse moyenne
+        // 1. Analyser la robustesse moyenne des mots de passe
         double totalStrength = 0;
         List<String> weakPasswords = new ArrayList<>();
         List<String> mediumPasswords = new ArrayList<>();
 
-        for (PasswordEntry entry : passwordEntries) {
-            PasswordStrength strength = new PasswordStrength(entry.password);
+        for (Profile profile : profiles) {
+            String password = profile.getPassword();
+            if (password == null || password.isEmpty()) continue;
+
+            PasswordStrength strength = new PasswordStrength(password);
             totalStrength += strength.getLevel();
 
             if (strength.getLevel() <= 2) {
-                weakPasswords.add(entry.serviceName);
+                weakPasswords.add(profile.getService());
             } else if (strength.getLevel() == 3) {
-                mediumPasswords.add(entry.serviceName);
+                mediumPasswords.add(profile.getService());
             }
         }
 
@@ -124,10 +139,13 @@ public class SecurityScorePanel extends JPanel {
             totalScore -= 15;
         }
 
-        // 2. Détecter les mots de passe identiques
+        // 2. Détecter les mots de passe identiques (réutilisation)
         Map<String, List<String>> passwordMap = new HashMap<>();
-        for (PasswordEntry entry : passwordEntries) {
-            passwordMap.computeIfAbsent(entry.password, k -> new ArrayList<>()).add(entry.serviceName);
+        for (Profile profile : profiles) {
+            String password = profile.getPassword();
+            if (password == null || password.isEmpty()) continue;
+
+            passwordMap.computeIfAbsent(password, k -> new ArrayList<>()).add(profile.getService());
         }
 
         for (Map.Entry<String, List<String>> entry : passwordMap.entrySet()) {
@@ -159,11 +177,14 @@ public class SecurityScorePanel extends JPanel {
             ));
         }
 
-        // 4. Vérifier les mots de passe dans le dictionnaire
+        // 4. Vérifier les mots de passe dans le dictionnaire (mots courants)
         List<String> dictionaryPasswords = new ArrayList<>();
-        for (PasswordEntry entry : passwordEntries) {
-            if (WeakPasswordDictionary.isWeak(entry.password)) {
-                dictionaryPasswords.add(entry.serviceName);
+        for (Profile profile : profiles) {
+            String password = profile.getPassword();
+            if (password == null || password.isEmpty()) continue;
+
+            if (WeakPasswordDictionary.isWeak(password)) {
+                dictionaryPasswords.add(profile.getService());
             }
         }
 
@@ -176,7 +197,7 @@ public class SecurityScorePanel extends JPanel {
             ));
         }
 
-        // 5. Détecter les patterns similaires
+        // 5. Détecter les patterns similaires entre mots de passe
         List<String> similarPatterns = detectSimilarPatterns();
         if (!similarPatterns.isEmpty()) {
             warnings.add(new SecurityWarning(
@@ -186,11 +207,14 @@ public class SecurityScorePanel extends JPanel {
             ));
         }
 
-        // 6. Longueur minimale
+        // 6. Vérifier la longueur minimale (moins de 8 caractères)
         List<String> shortPasswords = new ArrayList<>();
-        for (PasswordEntry entry : passwordEntries) {
-            if (entry.password.length() < 8) {
-                shortPasswords.add(entry.serviceName);
+        for (Profile profile : profiles) {
+            String password = profile.getPassword();
+            if (password == null) continue;
+
+            if (password.length() < 8) {
+                shortPasswords.add(profile.getService());
             }
         }
 
@@ -203,6 +227,7 @@ public class SecurityScorePanel extends JPanel {
             ));
         }
 
+        // Score final entre 0 et 100
         globalScore = Math.max(0, Math.min(100, totalScore));
 
         // Trier les warnings : CRITICAL en premier, puis WARNING
@@ -213,15 +238,17 @@ public class SecurityScorePanel extends JPanel {
     }
 
     private List<String> detectSimilarPatterns() {
-        // Grouper les mots de passe par pattern
         Map<String, List<String>> patternMap = new HashMap<>();
 
-        for (PasswordEntry entry : passwordEntries) {
-            String pattern = extractPattern(entry.password);
-            patternMap.computeIfAbsent(pattern, k -> new ArrayList<>()).add(entry.serviceName);
+        for (Profile profile : profiles) {
+            String password = profile.getPassword();
+            if (password == null || password.isEmpty()) continue;
+
+            String pattern = extractPattern(password);
+            patternMap.computeIfAbsent(pattern, k -> new ArrayList<>()).add(profile.getService());
         }
 
-        // Chercher les patterns utilisés plus de 2 fois
+        // Chercher les patterns utilisés 3 fois ou plus
         List<String> similarAccounts = new ArrayList<>();
         for (Map.Entry<String, List<String>> entry : patternMap.entrySet()) {
             if (entry.getValue().size() >= 3) {
@@ -369,17 +396,6 @@ public class SecurityScorePanel extends JPanel {
         return card;
     }
 
-    // Classes internes
-    private static class PasswordEntry {
-        String serviceName;
-        String password;
-
-        public PasswordEntry(String serviceName, String password) {
-            this.serviceName = serviceName;
-            this.password = password;
-        }
-    }
-
     private static class SecurityWarning {
         SecurityLevel level;
         String message;
@@ -393,7 +409,7 @@ public class SecurityScorePanel extends JPanel {
     }
 
     private enum SecurityLevel {
-        CRITICAL,
-        WARNING
+        CRITICAL,  // Rouge - Problème grave
+        WARNING    // Orange - Avertissement
     }
 }
