@@ -13,6 +13,16 @@ import java.awt.event.*;
 import java.security.Provider;
 import java.util.Arrays;
 
+/**
+ * Panel de gestion du compte utilisateur.
+ *
+ * Permet à l'utilisateur de :
+ * - Modifier son identifiant
+ * - Changer son mot de passe
+ *
+ * @author ARCELON Louis, MARTEL Mathieu
+ * @version v0.1
+ */
 public class AccountManagementPanel extends JPanel implements SessionListener {
 
     private static final Color PURPLE_BG = new Color(88, 70, 150);
@@ -62,6 +72,9 @@ public class AccountManagementPanel extends JPanel implements SessionListener {
         SessionManager.addListener(this);
     }
 
+    /**
+     * Crée la section "Informations du compte" avec tous les champs du formulaire.
+     */
     private JPanel createAccountSection() {
         JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
@@ -156,6 +169,13 @@ public class AccountManagementPanel extends JPanel implements SessionListener {
         return panel;
     }
 
+    /**
+     * Crée un panel de saisie de mot de passe avec bouton oeil pour afficher/masquer le mot de passe.
+     *
+     * @param isNewPassword true si c'est le champ "nouveau mot de passe"
+     * @param isConfirmPassword true si c'est le champ "confirmation"
+     * @return Le panel configuré avec le JPasswordField et le bouton oeil
+     */
     private JPanel createPasswordPanel(boolean isNewPassword, boolean isConfirmPassword) {
         JPanel passwordPanel = new JPanel(new BorderLayout());
         passwordPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 40));
@@ -182,13 +202,14 @@ public class AccountManagementPanel extends JPanel implements SessionListener {
         field.setBorder(BorderFactory.createEmptyBorder());
         passwordPanel.add(field, BorderLayout.CENTER);
 
-        // Bouton œil
+        // Bouton oeil
         JButton eyeButton = createEyeButton(field);
         passwordPanel.add(eyeButton, BorderLayout.EAST);
 
         return passwordPanel;
     }
 
+    // Crée le bouton oeil pour afficher/masquer le mot de passe
     private JButton createEyeButton(JPasswordField targetField) {
         JButton button = new JButton();
         button.setBorder(BorderFactory.createEmptyBorder());
@@ -214,6 +235,7 @@ public class AccountManagementPanel extends JPanel implements SessionListener {
         return button;
     }
 
+    // Crée un bouton stylisé avec coins arrondis et couleur personnalisable
     private JButton createStyledButton(String text, Color bgColor) {
         JButton button = new JButton(text) {
             @Override
@@ -244,11 +266,24 @@ public class AccountManagementPanel extends JPanel implements SessionListener {
         return button;
     }
 
+    /**
+     * Charge les données de l'utilisateur connecté dans le formulaire.
+     * Appelée automatiquement au login via SessionListener.
+     */
     private void loadUserData() {
-
         usernameField.setText(SessionManager.getCurrentUser().getUsername());
     }
 
+    /**
+     * Gère la sauvegarde des modifications du compte utilisateur.
+     *
+     * Effectue les opérations suivantes :
+     *  -Valide les champs (login, mots de passe)
+     *  -Vérifie que le mot de passe actuel est correct
+     *  -Met à jour le profil utilisateur avec le nouveau mot de passe
+     *  -Re-encrypte les mots de passe stockés avec le nouveau hash
+     *  -Met à jour la session
+     */
     private void handleSaveAccount() {
         String username = usernameField.getText();
         char[] currentPassword = currentPasswordField.getPassword();
@@ -313,6 +348,11 @@ public class AccountManagementPanel extends JPanel implements SessionListener {
         confirmPasswordField.setText("");
     }
 
+    /**
+     * Gère la suppression du compte utilisateur.
+     *
+     * REMARQUE: Ne fonctionne pas.
+     */
     private void handleDeleteAccount() {
         // Créer un panel de confirmation personnalisé
         JPanel confirmPanel = new JPanel();
@@ -380,6 +420,7 @@ public class AccountManagementPanel extends JPanel implements SessionListener {
         }
     }
 
+    // Charge et redimensionne une icône depuis les ressources
     private ImageIcon loadIcon(String path, int width, int height) {
         try {
             ImageIcon icon = new ImageIcon(getClass().getResource(path));
@@ -399,6 +440,6 @@ public class AccountManagementPanel extends JPanel implements SessionListener {
 
     @Override
     public void onDisconnect() {
-
+        // Rien
     }
 }

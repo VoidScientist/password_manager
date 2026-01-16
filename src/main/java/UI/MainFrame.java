@@ -7,8 +7,9 @@ import UI.panels.*;
 import javax.swing.*;
 import java.awt.*;
 
-// La fenêtre principale de l'application
-
+/**
+ * Classe permettant d'afficher la fenêtre principale de l'application.
+ */
 public class MainFrame extends JFrame implements SessionListener {
 
     private SideMenu sideMenu;
@@ -103,7 +104,10 @@ public class MainFrame extends JFrame implements SessionListener {
         mainContainer.repaint();
     }
 
-    // Méthode pour changer de page
+    /**
+     * Méthode permettant de changer de page en donnant le nom de la page.
+     * @param pageName nom de la page vers laquelle switch
+     */
     public void showPage(String pageName) {
         // Nettoyer les champs avant d'afficher une page
         if (pageName.equals("login")) {

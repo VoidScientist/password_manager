@@ -16,6 +16,14 @@ import Managers.ServiceManager;
 import Managers.SessionManager;
 import Utilities.Security.Password.*;
 
+/**
+ * Panel principal de gestion du coffre-fort de mots de passe.
+ * Permet de créer, modifier, supprimer et rechercher des profils.
+ * Inclut des filtres (catégorie, date, nom) et un indicateur de force des mots de passe.
+ *
+ * @author ARCELON Louis, MARTEL Mathieu
+ * @version v0.1
+ */
 public class VaultPanel extends JPanel implements SessionListener {
 
     private static final Color PURPLE_BG = new Color(88, 70, 150);
@@ -70,6 +78,7 @@ public class VaultPanel extends JPanel implements SessionListener {
 
     }
 
+    // Crée le panel principal avec les filtres et la liste des comptes
     private JPanel createMainPanel() {
         JPanel panel = new JPanel(new BorderLayout());
         panel.setBackground(Color.WHITE);
@@ -91,6 +100,7 @@ public class VaultPanel extends JPanel implements SessionListener {
         return panel;
     }
 
+    // Crée le panel de filtrage (catégorie, date, nom, recherche)
     private JPanel createFilterPanel() {
         // Panel principal avec layout vertical
         JPanel mainPanel = new JPanel();
@@ -143,6 +153,7 @@ public class VaultPanel extends JPanel implements SessionListener {
         return mainPanel;
     }
 
+    // Rafraîchit l'affichage quand un filtre change
     private void onFilterChanged(ActionEvent actionEvent) {
         displayAllProfiles();
     }
@@ -186,7 +197,6 @@ public class VaultPanel extends JPanel implements SessionListener {
 
     /**
      * Charge les catégories depuis le backend
-     * FIX: Ajout de try-catch pour éviter les crashes
      */
     private void loadCategories() {
         try {
@@ -195,7 +205,7 @@ public class VaultPanel extends JPanel implements SessionListener {
             String prevItem = (String) categoryFilter.getSelectedItem();
 
             categoryFilter.removeAllItems();
-            categoryFilter.addItem("Toutes"); // FIX: Toujours ajouter "Toutes" en premier
+            categoryFilter.addItem("Toutes");
 
             for (Category cat : categories) {
                 categoryFilter.addItem(cat.getName());
@@ -241,7 +251,6 @@ public class VaultPanel extends JPanel implements SessionListener {
 
     /**
      * Charge les profils depuis le backend
-     * FIX: Ajout de try-catch pour éviter les crashes
      */
     private void loadProfiles() {
         try {
@@ -268,8 +277,6 @@ public class VaultPanel extends JPanel implements SessionListener {
             return profilesToSearch;
         }
 
-        // Simulation temporaire (filtrage local) // TODO: ahah fix temporaire devient permanent
-
         List<Profile> filteredProfiles = new ArrayList<>();
         for (Profile profile : profilesToSearch) {
             // Recherche dans service, username, ou URL
@@ -282,23 +289,19 @@ public class VaultPanel extends JPanel implements SessionListener {
         return filteredProfiles;
     }
 
-    /**
-     * Affiche tous les profils
-     */
+    // Affiche tous les profils
     private void displayAllProfiles() {
         displayProfiles(profiles);
     }
 
     /**
      * Rafraîchit l'affichage avec une liste de profils donnée
-     * IMPORTANT : Réutilise createAccountCard() pour chaque profil
      *
      * @param profilesToDisplay Liste des profils à afficher (tous ou filtrés)
      */
     private void displayProfiles(List<Profile> profilesToDisplay) {
         accountListPanel.removeAll();
 
-        // FIX: Protection contre null
         if (profilesToDisplay == null) {
             profilesToDisplay = new ArrayList<>();
         }
@@ -334,7 +337,6 @@ public class VaultPanel extends JPanel implements SessionListener {
                     .toList();
         }
 
-        // FIX: Gestion correcte du filtre "Toutes" catégories
         String selectedCategory = (String) categoryFilter.getSelectedItem();
         if (selectedCategory != null && !selectedCategory.equals("Toutes")) {
             profilesToDisplay = profilesToDisplay.stream()
@@ -385,6 +387,7 @@ public class VaultPanel extends JPanel implements SessionListener {
         accountListPanel.repaint();
     }
 
+    // Crée une card pour un profil (icône + infos + bouton oeil)
     private JPanel createAccountCard(Profile profile) {
         JPanel card = new JPanel(new BorderLayout(15, 0));
         card.setBackground(Color.WHITE);
@@ -451,7 +454,6 @@ public class VaultPanel extends JPanel implements SessionListener {
 
         eyeButton.addActionListener(e -> {
             if (eyeButton.getIcon() == eyeClosedIcon) {
-                // FIX: Gérer le cas où getPassword() retourne null
                 String password = profile.getPassword();
                 if (password != null) {
                     passwordLabel.setText(password);
@@ -499,6 +501,7 @@ public class VaultPanel extends JPanel implements SessionListener {
         return card;
     }
 
+    // Crée le bouton "+" flottant en bas à droite
     private JPanel createAddButton() {
         JPanel buttonContainer = new JPanel();
         buttonContainer.setLayout(new FlowLayout(FlowLayout.RIGHT, 20, 20));
@@ -539,6 +542,7 @@ public class VaultPanel extends JPanel implements SessionListener {
         return buttonContainer;
     }
 
+    // Affiche le panel de création d'un nouveau profil
     private void showNewAccountPanel() {
         String panelName = "new_profile";
         Profile newProfile = new Profile("", "", "", "");
@@ -555,8 +559,9 @@ public class VaultPanel extends JPanel implements SessionListener {
         repaint();
     }
 
+    // Affiche le panel de détails/modification d'un profil existant
     private void showAccountDetails(Profile profile) {
-        String panelName = "details_" + profile.getId(); // FIX: Utiliser l'ID au lieu du service pour l'unicité
+        String panelName = "details_" + profile.getId();
 
         loadCategories();
 
@@ -571,7 +576,7 @@ public class VaultPanel extends JPanel implements SessionListener {
     }
 
     /**
-     * FIX: Clone le profile avant de l'éditer pour permettre l'annulation
+     * Clone le profile avant de l'éditer pour permettre l'annulation
      */
     private Profile cloneProfile(Profile original) {
         Profile clone = new Profile(
@@ -585,6 +590,7 @@ public class VaultPanel extends JPanel implements SessionListener {
         return clone;
     }
 
+    // Crée le formulaire de création/modification d'un profil
     private JPanel createDetailsPanel(Profile profile, boolean isNew) {
         JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
@@ -707,7 +713,7 @@ public class VaultPanel extends JPanel implements SessionListener {
         errorLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
         errorLabel.setHorizontalAlignment(SwingConstants.CENTER);
         errorLabel.setVerticalAlignment(SwingConstants.TOP);
-        errorLabel.setPreferredSize(new Dimension(340, 30)); // FIX: Hauteur pour 2 lignes
+        errorLabel.setPreferredSize(new Dimension(340, 30));
         errorLabel.setMaximumSize(new Dimension(340, 30));
         panel.add(errorLabel);
         panel.add(Box.createRigidArea(new Dimension(0, 8)));
@@ -727,7 +733,6 @@ public class VaultPanel extends JPanel implements SessionListener {
             String newUrl = urlField.getText().trim();
             String newCategoryName = (String) categoryCombo.getSelectedItem();
 
-            // FIX: Utiliser <html> pour le wrapping automatique
             errorLabel.setText(" ");
 
             if (newService.isEmpty()) {
@@ -745,7 +750,6 @@ public class VaultPanel extends JPanel implements SessionListener {
                 return;
             }
 
-            // FIX: Gestion d'erreur avec try-catch
             try {
                 // Récupérer l'objet Category correspondant
                 Category selectedCategory = ServiceManager.getDataService().findCategoryByName(newCategoryName);
@@ -766,7 +770,6 @@ public class VaultPanel extends JPanel implements SessionListener {
                     }
 
                 } else {
-                    // FIX: Modification du profile ORIGINAL (pas un clone)
                     ServiceManager.getDataService().attachProfileToCategory(profile, selectedCategory);
 
                     profile.setService(newService);
@@ -816,6 +819,11 @@ public class VaultPanel extends JPanel implements SessionListener {
         return panel;
     }
 
+    /**
+     * Supprime un profil après confirmation.
+     *
+     * @param profile Le profil à supprimer
+     */
     private void handleDeleteProfile(Profile profile) {
         int confirm = JOptionPane.showConfirmDialog(
                 this,
@@ -827,7 +835,6 @@ public class VaultPanel extends JPanel implements SessionListener {
         );
 
         if (confirm == JOptionPane.YES_OPTION) {
-            // FIX: Gestion d'erreur avec try-catch
             try {
                 ServiceManager.getDataService().removeProfile(profile);
 
@@ -848,6 +855,7 @@ public class VaultPanel extends JPanel implements SessionListener {
         }
     }
 
+    // Crée un champ de catégorie avec dropdown
     private JPanel createCategoryField(String label, JComboBox<String> categoryCombo) {
         JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
@@ -871,6 +879,7 @@ public class VaultPanel extends JPanel implements SessionListener {
         return panel;
     }
 
+    // Crée un champ texte avec label
     private JPanel createDetailField(String label, JTextField textField) {
         JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
@@ -898,6 +907,7 @@ public class VaultPanel extends JPanel implements SessionListener {
         return panel;
     }
 
+    // Crée un champ mot de passe avec oeil et barre de force
     private JPanel createDetailPasswordFieldWithStrengthUpdate(String label, JPasswordField passwordField, JPanel strengthBarPanel) {
         JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
@@ -998,6 +1008,7 @@ public class VaultPanel extends JPanel implements SessionListener {
         return panel;
     }
 
+    // Met à jour l'affichage de la barre de force
     private void updateStrengthBarDisplay(JPanel strengthBarPanel, int level) {
         Component[] components = strengthBarPanel.getComponents();
 
@@ -1024,6 +1035,7 @@ public class VaultPanel extends JPanel implements SessionListener {
         strengthBarPanel.repaint();
     }
 
+    // Crée la barre de force vide
     private JPanel createStrengthBar(int strength) {
         JPanel panel = new JPanel(new FlowLayout(FlowLayout.CENTER, 2, 0));
         panel.setBackground(LIGHT_GRAY);
@@ -1040,6 +1052,7 @@ public class VaultPanel extends JPanel implements SessionListener {
         return panel;
     }
 
+    // Crée un bouton avec coins arrondis et couleur personnalisable
     private JButton createRoundedButton(String text, Color bgColor) {
         JButton button = new JButton(text);
         button.setFont(new Font("Arial", Font.BOLD, 11));
@@ -1060,6 +1073,7 @@ public class VaultPanel extends JPanel implements SessionListener {
         return button;
     }
 
+    // Charge et redimensionne une icône
     private ImageIcon loadIcon(String path, int width, int height) {
         try {
             ImageIcon icon = new ImageIcon(getClass().getResource(path));
@@ -1073,7 +1087,6 @@ public class VaultPanel extends JPanel implements SessionListener {
 
     @Override
     public void onLogin() {
-        // FIX: Gestion d'erreur lors du chargement initial
         try {
             loadProfiles();
             loadCategories();
@@ -1090,7 +1103,7 @@ public class VaultPanel extends JPanel implements SessionListener {
 
     @Override
     public void onDisconnect() {
-        // FIX: Clear les données à la déconnexion
+        // Clear les données à la déconnexion
         profiles = new ArrayList<>();
         categories = new ArrayList<>();
         displayAllProfiles();
