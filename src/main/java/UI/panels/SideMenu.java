@@ -154,7 +154,10 @@ public class SideMenu extends JPanel {
                     JOptionPane.QUESTION_MESSAGE
             );
 
-            SessionManager.disconnect();
+            if (confirm == JOptionPane.YES_OPTION) {
+                SessionManager.disconnect();
+            }
+
         });
 
         return button;
