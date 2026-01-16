@@ -2,6 +2,9 @@ package UI.panels;
 
 import Entities.Profile;
 import Entities.UserProfile;
+import Managers.ServiceManager;
+import Managers.SessionManager;
+import Managers.Interface.SessionListener;
 import Utilities.Security.Password.*;
 
 import javax.swing.*;
@@ -9,7 +12,7 @@ import java.awt.*;
 import java.util.*;
 import java.util.List;
 
-public class SecurityScorePanel extends JPanel {
+public class SecurityScorePanel extends JPanel implements SessionListener {
 
     private static final Color PURPLE_BG = new Color(88, 70, 150);
     private static final Color LIGHT_GRAY = new Color(240, 240, 240);
@@ -31,9 +34,6 @@ public class SecurityScorePanel extends JPanel {
 
         // Charger le dictionnaire des mots de passe faibles
         WeakPasswordDictionary.load();
-
-        // Charger les données depuis le backend
-        loadProfilesFromBackend();
 
         // Calculer le score et les warnings
         calculateSecurityScore();
@@ -78,27 +78,15 @@ public class SecurityScorePanel extends JPanel {
         scrollPane.getVerticalScrollBar().setUnitIncrement(16);
         mainPanel.add(scrollPane, BorderLayout.CENTER);
 
+        SessionManager.addListener(this);
+
         add(mainPanel);
     }
 
     private void loadProfilesFromBackend() {
-        // TODO: Remplacer par l'appel backend pour récupérer le UserProfile
-        // Simulation temporaire
-        profiles = new ArrayList<>();
 
-        Profile p1 = new Profile("Instagram", "jean.j", "azazafa586", "https://instagram.com");
-        Profile p2 = new Profile("Facebook", "jean.jean", "motdepasse123", "https://facebook.com");
-        Profile p3 = new Profile("Gmail", "jean.jean@gmail.com", "mom20", "https://gmail.com");
-        Profile p4 = new Profile("Twitter", "jean_twitter", "#6K!_ucrojwm%vSGE0=A", "https://twitter.com");
-        Profile p5 = new Profile("LinkedIn", "jean.j", "P@ssw0rd!2024", "https://linkedin.com");
-        Profile p6 = new Profile("Amazon", "jean.j", "uq70}^pSdjvb*2LTJ*:M", "https://amazon.com");
+        profiles = ServiceManager.getDataService().getProfiles();
 
-        profiles.add(p1);
-        profiles.add(p2);
-        profiles.add(p3);
-        profiles.add(p4);
-        profiles.add(p5);
-        profiles.add(p6);
     }
 
     private void calculateSecurityScore() {
@@ -394,6 +382,17 @@ public class SecurityScorePanel extends JPanel {
         card.add(messagePanel, BorderLayout.CENTER);
 
         return card;
+    }
+
+    @Override
+    public void onLogin() {
+        // Charger les données depuis le backend
+        loadProfilesFromBackend();
+    }
+
+    @Override
+    public void onDisconnect() {
+
     }
 
     private static class SecurityWarning {

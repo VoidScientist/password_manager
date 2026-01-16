@@ -49,6 +49,18 @@ public class CategoryRepository extends JPARepository<Category> implements ISecu
         }
     }
 
+    public Category findByName(String name, String uuid) {
+        try {
+            return this.getEntityManager()
+                    .createQuery("SELECT c FROM Category c WHERE c.owner.uuid = :uuid AND c.name = :name", Category.class)
+                    .setParameter("uuid", uuid)
+                    .setParameter("name", name)
+                    .getSingleResult();
+        } catch (NoResultException e) {
+            return null;
+        }
+    }
+
     /**
      * Méthode permettant de récupérer toutes les catégories appartenant à un utilisateur donné.
      *

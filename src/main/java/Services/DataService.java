@@ -7,9 +7,11 @@ import Managers.SessionManager;
 import Repositories.CategoryRepository;
 import Repositories.Interface.ISecureRepository;
 import Repositories.ProfileRepository;
+import Utilities.Security.Encryption.PasswordEncrypter;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.EntityTransaction;
+import org.hibernate.Session;
 
 import java.util.List;
 
@@ -32,9 +34,9 @@ public class DataService {
     private final CategoryRepository catRep;
     private final ProfileRepository profRep;
 
-    public DataService(EntityManagerFactory emf) {
+    public DataService(EntityManager em) {
 
-        this.em = emf.createEntityManager();
+        this.em = em;
 
         catRep = new CategoryRepository(em);
         profRep = new ProfileRepository(em);
@@ -80,9 +82,6 @@ public class DataService {
 
     }
 
-
-
-
     public void removeCategory(Category cat) throws IllegalStateException {
         try {
             SessionManager.getCurrentUser().removeCategory(cat);
@@ -100,6 +99,19 @@ public class DataService {
     }
 
 
+    public void reencryptPasswords(String oldHash, String newHash) {
+
+        for (Profile profile : getProfiles()) {
+
+            String oldPw = PasswordEncrypter.decrypt(profile.getEncrypted_password(), oldHash);
+            profile.setEncryptedPassword(PasswordEncrypter.encrypt(oldPw, newHash));
+
+            saveProfile(profile);
+
+        }
+
+    }
+
 
     public List<Category> getCategories() {
 
@@ -109,30 +121,42 @@ public class DataService {
 
     }
 
+    public List<Profile> getProfiles() {
 
+        String uuid = SessionManager.getCurrentUser().getUuid();
+
+        return this.profRep.readAll(uuid);
+
+    }
 
 
     public void attachProfileToCategory(Profile prof, Category cat) {
 
-        if (prof.getCategory() != null) {
-            this.detachProfileFromCategory(prof);
-        }
+        if (cat == null) return;
+
+        this.detachProfileFromCategory(prof);
 
         cat.addProfile(prof);
 
     }
 
+
     public void detachProfileFromCategory(Profile prof) {
         Category profCat;
 
         if ((profCat = prof.getCategory()) != null) {
-
-            profCat.removeProfile(prof);
+            try {
+                profCat.removeProfile(prof);
+            } catch (Exception ignored) {}
 
         }
 
     }
 
+
+    public Category findCategoryByName(String name) {
+        return this.catRep.findByName(name, SessionManager.getCurrentUser().getUuid());
+    }
 
 
     public Category saveCategory(Category cat) throws IllegalStateException {

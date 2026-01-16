@@ -2,6 +2,7 @@ package Managers;
 
 import Services.DataService;
 import Services.UserService;
+import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.Persistence;
 
@@ -19,6 +20,7 @@ public class ServiceManager {
     private static boolean initialized = false;
 
     private static EntityManagerFactory emf;
+    private static EntityManager em;
     private static UserService userService;
     private static DataService dataService;
 
@@ -35,8 +37,10 @@ public class ServiceManager {
         }
 
         emf =  Persistence.createEntityManagerFactory(persistenceUnitName);
-        userService = new UserService(emf);
-        dataService = new DataService(emf);
+        em = emf.createEntityManager();
+
+        userService = new UserService(em);
+        dataService = new DataService(em);
 
         initialized = true;
 

@@ -5,6 +5,7 @@ import Entities.Category;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.security.Provider;
 import java.util.ArrayList;
 import java.util.List;
 import Managers.Interface.SessionListener;
@@ -65,8 +66,6 @@ public class VaultPanel extends JPanel implements SessionListener {
 
         SessionManager.addListener(this);
 
-        loadProfiles();
-        displayAllProfiles();
     }
 
     private JPanel createMainPanel() {
@@ -182,8 +181,8 @@ public class VaultPanel extends JPanel implements SessionListener {
      */
     private void loadCategories() {
 
-        // Simulation temporaire
         categories = ServiceManager.getDataService().getCategories();
+
     }
 
     /**
@@ -202,40 +201,15 @@ public class VaultPanel extends JPanel implements SessionListener {
         return names;
     }
 
-    /**
-     * Récupère l'objet Category à partir de son nom
-     */
-    private Category getCategoryByName(String name) {
-        if (categories == null || name == null || name.isEmpty()) {
-            return null;
-        }
-
-        for (Category category : categories) {
-            if (category.getName().equals(name)) {
-                return category;
-            }
-        }
-        return null;
-    }
 
     /**
      * Charge les profils depuis le backend
-     * TODO: Appeler le service backend pour récupérer Set<Profile>
+     *
      */
     private void loadProfiles() {
-        // TODO: Remplacer par l'appel backend
-        // Set<Profile> profilesFromBackend = userProfile.getProfiles();
-        // profiles = new ArrayList<>(profilesFromBackend);
 
-        // Simulation temporaire avec des données en dur
-        profiles = new ArrayList<>();
-        Profile p1 = new Profile("Instagram", "jean.j", "MotDePasse123!", "https://instagram.com");
-        Profile p2 = new Profile("Facebook", "jean.jean", "Azerty456!", "https://facebook.com");
-        Profile p3 = new Profile("Gmail", "jean.jean@gmail.com", "Gmail789!", "https://gmail.com");
+        profiles = ServiceManager.getDataService().getProfiles();
 
-        profiles.add(p1);
-        profiles.add(p2);
-        profiles.add(p3);
     }
 
     /**
@@ -635,28 +609,43 @@ public class VaultPanel extends JPanel implements SessionListener {
             }
 
             // Récupérer l'objet Category correspondant
-            Category selectedCategory = getCategoryByName(newCategoryName);
+            Category selectedCategory = ServiceManager.getDataService().findCategoryByName(newCategoryName);
 
             if (isNew) {
-                Profile newProfile = new Profile(newService, newLogin, newPassword, newUrl);
-                newProfile.setCategory(selectedCategory);
-                // TODO: Ajouter via backend
-                // Profile savedProfile = profileService.create(newProfile);
-                System.out.println("Ajout du profil: " + newService + " (Catégorie: " +
-                        (selectedCategory != null ? selectedCategory.getName() : "null") + ")");
+
+                Profile newProfile = ServiceManager.getDataService().createProfile(
+                        newService,
+                        newLogin,
+                        newEmail,
+                        newPassword,
+                        newUrl
+                );
+
+                if (selectedCategory != null) {
+                    ServiceManager.getDataService().attachProfileToCategory(newProfile, selectedCategory);
+
+                    newProfile = ServiceManager.getDataService().saveProfile(newProfile);
+                }
 
                 profiles.add(newProfile);
+
+
+
             } else {
-                // TODO: Modifier via backend
-                // profileService.update(profile.getId(), newService, newLogin, newPassword, newUrl, selectedCategory);
-                System.out.println("Modification du profil: " + profile.getService() + " -> " + newService +
-                        " (Catégorie: " + (selectedCategory != null ? selectedCategory.getName() : "null") + ")");
+
+                ServiceManager.getDataService().attachProfileToCategory(profile, selectedCategory);
 
                 profile.setService(newService);
                 profile.setUsername(newLogin);
                 profile.setPassword(newPassword);
                 profile.setUrl(newUrl);
-                profile.setCategory(selectedCategory);
+                profile.setEmail(newEmail);
+
+                ServiceManager.getDataService().saveProfile(profile);
+
+                loadProfiles();
+
+
             }
 
             String searchQuery = searchField.getText().trim();
@@ -704,9 +693,8 @@ public class VaultPanel extends JPanel implements SessionListener {
         );
 
         if (confirm == JOptionPane.YES_OPTION) {
-            // TODO: Supprimer via backend
-            // profileService.delete(profile.getId());
-            System.out.println("Suppression du profil: " + profile.getService());
+
+            ServiceManager.getDataService().removeProfile(profile);
 
             profiles.remove(profile);
 
@@ -939,7 +927,10 @@ public class VaultPanel extends JPanel implements SessionListener {
 
     @Override
     public void onLogin() {
+        loadProfiles();
         loadCategories();
+
+        displayAllProfiles();
     }
 
     @Override

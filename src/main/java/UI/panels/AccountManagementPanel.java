@@ -285,6 +285,8 @@ public class AccountManagementPanel extends JPanel implements SessionListener {
 
         UserProfile current = SessionManager.getCurrentUser();
 
+        String prevHash = current.getPasswordHash();
+
         try {
             UserProfile updatedProfile = userService.updateProfile(
                     current,
@@ -297,6 +299,8 @@ public class AccountManagementPanel extends JPanel implements SessionListener {
             errorLabel.setText(e.getMessage());
             return;
         }
+
+        ServiceManager.getDataService().reencryptPasswords(prevHash, SessionManager.getCurrentUser().getPasswordHash());
 
 
         // Message de succès

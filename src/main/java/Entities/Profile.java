@@ -139,11 +139,19 @@ public class Profile {
         this.owner = owner;
     }
 
+    public void setEncryptedPassword(String encrypted_password) {
+        this.encrypted_password = encrypted_password;
+    }
+
     public String getPassword() {
         if (password != null) return this.password;
 
         if (this.owner != null) {
-            this.password = PasswordEncrypter.decrypt(encrypted_password, this.owner.getPasswordHash());
+            try {
+                this.password = PasswordEncrypter.decrypt(encrypted_password, this.owner.getPasswordHash());
+            } catch (Exception e) {
+                return null;
+            }
         }
 
         return this.password;

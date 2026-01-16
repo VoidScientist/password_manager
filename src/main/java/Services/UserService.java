@@ -26,16 +26,14 @@ public class UserService implements SessionListener {
     private final int MIN_USERNAME_LENGTH = 3;
     private final int MIN_PASSWORD_LENGTH = 8;
 
-    private final EntityManagerFactory emf;
     private final EntityManager em;
 
     private final UserProfileRepository userRep;
 
 
-    public UserService(EntityManagerFactory emf) {
+    public UserService(EntityManager em) {
 
-        this.emf = emf;
-        this.em = emf.createEntityManager();
+        this.em = em;
 
         this.userRep = new UserProfileRepository(em);
 
