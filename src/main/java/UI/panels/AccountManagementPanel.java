@@ -348,7 +348,6 @@ public class AccountManagementPanel extends JPanel implements SessionListener {
     /**
      * Gère la suppression du compte utilisateur.
      *
-     * REMARQUE: Ne fonctionne pas.
      */
     private void handleDeleteAccount() {
         // Créer un panel de confirmation personnalisé
