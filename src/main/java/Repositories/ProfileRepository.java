@@ -62,6 +62,14 @@ public class ProfileRepository extends JPARepository<Profile> implements ISecure
                 .getResultList();
     }
 
+    /**
+     * 
+     * Méthode permettant de trouver un profil par le nom de sa catégorie.
+     * 
+     * @param  catName nom de la catégorie auquel doit appartenir le profil.
+     * @param  uuid    uuid de l'utilisateur auquel appartient le profil.
+     * @return         une liste de profils correspondant au critère.
+     */
     public List<Profile> findByCategoryName(String catName, String uuid) {
         return this.getEntityManager()
                 .createQuery("SELECT p FROM Profile p WHERE p.owner.uuid = :uuid AND p.category.name = :name", Profile.class)
