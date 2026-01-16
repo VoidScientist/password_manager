@@ -1,12 +1,10 @@
 package UI.panels;
 
 import Managers.ServiceManager;
-import Managers.SessionManager;
 import UI.MainFrame;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
 
 /**
  * Classe permettant d'afficher le formulaire de login dans l'interface. Référée dans mainFrame par "login".

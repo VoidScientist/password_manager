@@ -1,20 +1,20 @@
 package UI.panels;
 
-import Entities.Profile;
 import Entities.Category;
+import Entities.Profile;
+import Managers.Interface.SessionListener;
+import Managers.ServiceManager;
+import Managers.SessionManager;
+import Utilities.Security.Password.PasswordStrength;
+import Utilities.Security.Password.WeakPasswordDictionary;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
-import java.security.Provider;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import Managers.Interface.SessionListener;
-
-import Managers.ServiceManager;
-import Managers.SessionManager;
-import Utilities.Security.Password.*;
 
 /**
  * Panel principal de gestion du coffre-fort de mots de passe.

@@ -5,12 +5,9 @@ import Managers.Interface.SessionListener;
 import Managers.ServiceManager;
 import Managers.SessionManager;
 import Services.UserService;
-import org.hibernate.Session;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.*;
-import java.security.Provider;
 import java.util.Arrays;
 
 /**

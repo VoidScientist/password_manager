@@ -1,18 +1,15 @@
 package UI.panels;
 
 import Entities.Category;
-import Entities.UserProfile;
 import Managers.Interface.SessionListener;
 import Managers.ServiceManager;
 import Managers.SessionManager;
-import org.hibernate.Session;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.*;
-import java.util.ArrayList;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.util.List;
-import java.util.Set;
 
 /**
  * Panel de gestion des catégories.

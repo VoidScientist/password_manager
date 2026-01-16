@@ -2,7 +2,6 @@ import Managers.ServiceManager;
 import UI.MainFrame;
 import Utilities.Config;
 
-
 import javax.swing.*;
 
 /**

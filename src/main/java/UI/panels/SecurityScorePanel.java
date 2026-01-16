@@ -2,15 +2,18 @@ package UI.panels;
 
 import Entities.Profile;
 import Entities.UserProfile;
+import Managers.Interface.SessionListener;
 import Managers.ServiceManager;
 import Managers.SessionManager;
-import Managers.Interface.SessionListener;
-import Utilities.Security.Password.*;
+import Utilities.Security.Password.PasswordStrength;
+import Utilities.Security.Password.WeakPasswordDictionary;
 
 import javax.swing.*;
 import java.awt.*;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Classe permettant d'afficher le panel de score de sécurité de l'application.

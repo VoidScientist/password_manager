@@ -1,11 +1,12 @@
 package UI.panels;
 
+import Utilities.Security.Password.PasswordGenerator;
+import Utilities.Security.Password.PasswordStats;
+import Utilities.Security.Password.PasswordStrength;
+
 import javax.swing.*;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
 import java.awt.*;
 import java.security.SecureRandom;
-import Utilities.Security.Password.*;
 
 /**
  * Classe permettant d'afficher l'onglet de génération de mot de passe.

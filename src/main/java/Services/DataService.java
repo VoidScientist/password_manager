@@ -9,9 +9,7 @@ import Repositories.Interface.ISecureRepository;
 import Repositories.ProfileRepository;
 import Utilities.Security.Encryption.PasswordEncrypter;
 import jakarta.persistence.EntityManager;
-import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.EntityTransaction;
-import org.hibernate.Session;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -87,7 +85,9 @@ public class DataService {
     public void removeCategory(Category cat) throws IllegalStateException {
         try {
             SessionManager.getCurrentUser().removeCategory(cat);
-        } catch (IllegalArgumentException ignored) {}
+        } catch (IllegalArgumentException ignored) {
+
+        }
 
         removeData(cat, this.catRep, "la catégorie");
     }

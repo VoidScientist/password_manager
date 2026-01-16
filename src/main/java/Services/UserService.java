@@ -1,14 +1,15 @@
 package Services;
 
 import Entities.UserProfile;
+import Managers.Interface.SessionListener;
 import Managers.SessionManager;
 import Repositories.UserProfileRepository;
-import Managers.Interface.SessionListener;
 import Utilities.Security.PasswordHasher;
-import jakarta.persistence.*;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityTransaction;
+import jakarta.persistence.RollbackException;
 
 import java.security.NoSuchAlgorithmException;
-import java.util.Arrays;
 
 /**
  * Classe s'occupant d'effectuer les actions telles que connecter, enregistrer et supprimer des utilisateurs.
