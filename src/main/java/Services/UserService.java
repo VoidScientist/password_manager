@@ -199,7 +199,20 @@ public class UserService implements SessionListener {
         }
 
     }
-    
+
+
+    /**
+     * 
+     * Méthode de mise à jour du profil utilisateur donné. 
+     * Permet de changer de mot de passe et de nom d'utilisateur.
+     * 
+     * @param  profile                      Entité UserProfile à modifier
+     * @param  username                     Nouveau nom d'utilisateur
+     * @param  password                     Nouveau mot de passe
+     * @return                              Le profile managé par le gestionnaire d'entité
+     * @throws IllegalArgumentException     Si nouveau mot de passe invalide
+     * @throws Exception                    Exception générale lors de l'échec de la sauvegarde du profil 
+     */
     public UserProfile updateProfile(UserProfile profile, String username, char[] password) throws Exception {
 
         EntityTransaction tx = em.getTransaction();        
