@@ -138,13 +138,25 @@ public class UserService implements SessionListener {
 
             if (e.getClass().equals(RollbackException.class)) {
                 throw new IllegalArgumentException("Ce nom d'utilisateur existe déjà!");
-            }
+            
 
         }
 
     }
 
 
+    /**
+     * 
+     * Supprime le compte utilisateur de la base de donnée.
+     * Non fonctionnel au moment de l'écriture de ce commentaire.
+     *
+     * TODO: réparer
+     * 
+     * @param  password                 mot de passe de l'utilisateur à supprimer (connecté)
+     * @throws IllegalStateException    si aucun utilisateur n'est connecté
+     * @throws IllegalArgumentException en cas de mauvais mot de passe
+     * @throws Exception                erreur générale
+     */
     public void removeAccount(char[] password)
             throws IllegalStateException, IllegalArgumentException, Exception {
 
