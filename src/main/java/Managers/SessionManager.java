@@ -25,9 +25,16 @@ public class SessionManager {
     private static final Set<SessionListener> listeners = new HashSet<>();
 
     /**
-     * FIX: Permet maintenant de se reconnecter après une déconnexion
+     * 
+     * Méthode permettant de changer l'utilisateur actuel en chargeant son profil.
+     * Déconnexion automatique de l'utilisateur déjà connecté.
+     *
+     * Cette méthode notifie {@code onLogin} des listeners.
+     * 
+     * @param  u                     instance du profil utilisateur UserProfile
+     * 
      */
-    public static void setCurrentUser(UserProfile u) throws IllegalStateException {
+    public static void setCurrentUser(UserProfile u) {
         if (currentUser != null) {
             System.err.println("WARNING: Un utilisateur était déjà connecté. Déconnexion automatique.");
             disconnect(); // Déconnecter l'utilisateur précédent
@@ -63,11 +70,12 @@ public class SessionManager {
     }
 
     /**
-     * FIX: Notification des listeners avant de clear currentUser
+     * Méthode de déconnexion de l'utilisateur actuel.
+     *
+     * Notifie {@code onDisconnect} des listeners.
      */
     public static void disconnect() {
         if (currentUser != null) {
-            // Notifier les listeners AVANT de clear
             listeners.forEach(SessionListener::onDisconnect);
             currentUser = null;
         }
