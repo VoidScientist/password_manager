@@ -1,6 +1,7 @@
 package Entities;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.Fetch;
 
 import java.util.*;
 
@@ -29,7 +30,7 @@ public class UserProfile {
     @OneToMany(mappedBy="owner", cascade={CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REMOVE})
     private final Set<Profile> profiles = new HashSet<>();
 
-    @OneToMany(mappedBy="owner",  cascade={CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REMOVE})
+    @OneToMany(mappedBy="owner",  cascade={CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REMOVE}, fetch=FetchType.EAGER)
     private final Set<Category> categories = new HashSet<>();
 
     public UserProfile(String username, String passwordHash) {
