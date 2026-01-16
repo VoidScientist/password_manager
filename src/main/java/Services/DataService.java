@@ -102,11 +102,11 @@ public class DataService {
 
 
     /**
-     * FIX: Re-encryption transactionnelle avec rollback automatique en cas d'erreur
+     * Méthode permettant de réencrypter avec un nouveau hash les mdp des profils de l'utilisateur.
      *
-     * @param oldHash Ancien hash du mot de passe maître
-     * @param newHash Nouveau hash du mot de passe maître
-     * @throws IllegalStateException Si la re-encryption échoue (avec rollback automatique)
+     * @param oldHash                Ancien hash du mot de passe maître
+     * @param newHash                Nouveau hash du mot de passe maître
+     * @throws IllegalStateException Si la reencryption échoue 
      */
     public void reencryptPasswords(String oldHash, String newHash) throws IllegalStateException {
 
@@ -127,13 +127,11 @@ public class DataService {
                 Profile profile = profiles.get(i);
 
                 try {
-                    // Décrypter avec l'ancien hash
+
                     String plainPassword = PasswordEncrypter.decrypt(profile.getEncrypted_password(), oldHash);
 
-                    // Re-encrypter avec le nouveau hash
                     String newEncryptedPassword = PasswordEncrypter.encrypt(plainPassword, newHash);
 
-                    // Mettre à jour
                     profile.setEncryptedPassword(newEncryptedPassword);
                     profRep.save(profile);
 
@@ -144,7 +142,6 @@ public class DataService {
             }
 
             tx.commit();
-            System.out.println("Re-encryption réussie pour " + profiles.size() + " profils");
 
         } catch (Exception e) {
 
@@ -153,7 +150,7 @@ public class DataService {
                 System.err.println("ROLLBACK de la re-encryption effectué");
             }
 
-            throw new IllegalStateException("Échec de la re-encryption. Tous les changements ont été annulés.", e);
+            throw new IllegalStateException("Échec de réencryption. Changements annulés.", e);
         }
     }
 
