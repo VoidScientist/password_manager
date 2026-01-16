@@ -266,6 +266,16 @@ public class UserService implements SessionListener {
     }
 
 
+    /**
+     *
+     * Méthode vérifiant si le mot de passe renseigné correspond à un hash avec salt.
+     * La forme du hash doit être {@code salt$hash}
+     * 
+     * @param  password                 mot de passe à vérifier
+     * @param  hashedPassword           mot de passe hashé
+     * @return                          true ou false en fonction de si le mdp correspond
+     * @throws NoSuchAlgorithmException erreur de hashage
+     */
     private static boolean checkPassword(char[] password, String hashedPassword)
             throws NoSuchAlgorithmException {
 
