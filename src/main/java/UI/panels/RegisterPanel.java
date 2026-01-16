@@ -7,6 +7,10 @@ import javax.swing.*;
 import java.awt.*;
 import java.util.Arrays;
 
+/**
+ * Classe qui gère l'affichage du panel d'inscription de l'application.
+ * Référée dans mainFrame par "register"
+ */
 public class RegisterPanel extends JPanel {
 
     private static final Color PURPLE_BG = new Color(88, 70, 150);
@@ -327,6 +331,10 @@ public class RegisterPanel extends JPanel {
         return button;
     }
 
+    /**
+     * Gère la création de compte grâce à {@code UserLogin.register()}.
+     * Vérifie plusieurs conditions et affiche les potentielles erreurs sur {@code errorLabel}
+     */
     private void handleRegister() {
         String username = usernameField.getText();
         char[] password = passwordField.getPassword();
@@ -370,6 +378,9 @@ public class RegisterPanel extends JPanel {
         timer.start();
     }
 
+    /**
+     * Callback permettant de revenir à la page de connexion.
+     */
     private void handleBackToLogin() {
         errorLabel.setText(" ");
         errorLabel.setForeground(new Color(244, 67, 54)); // Réinitialiser la couleur rouge
