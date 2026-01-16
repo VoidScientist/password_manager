@@ -8,6 +8,9 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 
+/**
+ * Classe permettant d'afficher le formulaire de login dans l'interface. Référée dans mainFrame par "login".
+ */
 public class LoginPanel extends JPanel {
 
     private static final Color PURPLE_BG = new Color(88, 70, 150);
@@ -299,6 +302,10 @@ public class LoginPanel extends JPanel {
         return button;
     }
 
+    /**
+     * Gère la connexion utilisateur en faisant appel à {@code UserService.login()}.
+     * Affiche une erreur dans {@code errorLabel} s'il y en a une.
+     */
     private void handleLogin() {
         String username = usernameField.getText();
         char[] password = passwordField.getPassword();
