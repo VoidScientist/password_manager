@@ -12,6 +12,10 @@ import java.awt.*;
 import java.util.*;
 import java.util.List;
 
+/**
+ * Classe permettant d'afficher le panel de score de sécurité de l'application.
+ * Référée dans mainFrame avec "securityscore".
+ */
 public class SecurityScorePanel extends JPanel implements SessionListener {
 
     private static final Color PURPLE_BG = new Color(88, 70, 150);
@@ -251,6 +255,9 @@ public class SecurityScorePanel extends JPanel implements SessionListener {
         resultsPanel.repaint();
     }
 
+    /**
+     * Charge les profils depuis la backend.
+     */
     private void loadProfilesFromBackend() {
         try {
             profiles = ServiceManager.getDataService().getProfiles();
