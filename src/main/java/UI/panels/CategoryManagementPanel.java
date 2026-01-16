@@ -14,6 +14,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
+/**
+ * Panel de gestion des catégories.
+ * Permet de créer, modifier et supprimer des catégories.
+ *
+ * @author ARCELON Louis, MARTEL Mathieu
+ * @version v0.1
+ */
 public class CategoryManagementPanel extends JPanel implements SessionListener {
 
     private static final Color PURPLE_BG = new Color(88, 70, 150);
@@ -107,6 +114,7 @@ public class CategoryManagementPanel extends JPanel implements SessionListener {
 
     }
 
+    // Affiche toutes les catégories sous forme de cards
     private void displayCategories() {
         categoriesListPanel.removeAll();
 
@@ -120,6 +128,7 @@ public class CategoryManagementPanel extends JPanel implements SessionListener {
         categoriesListPanel.repaint();
     }
 
+    // Crée une card pour une catégorie (icône + nom + description + bouton supprimer)
     private JPanel createCategoryCard(Category category) {
         JPanel card = new JPanel(new BorderLayout(15, 0));
         card.setBackground(Color.WHITE);
@@ -202,6 +211,7 @@ public class CategoryManagementPanel extends JPanel implements SessionListener {
         return card;
     }
 
+    // Affiche le panel de détail pour créer/modifier une catégorie
     private void showCategoryDetailPanel(Category category) {
         boolean isNewCategory = (category == null);
         Category workingCategory = isNewCategory ? new Category("", "") : category;
@@ -218,6 +228,7 @@ public class CategoryManagementPanel extends JPanel implements SessionListener {
         repaint();
     }
 
+    // Crée le formulaire de création/modification d'une catégorie
     private JPanel createCategoryDetailPanel(Category category, boolean isNewCategory) {
         JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
@@ -395,6 +406,12 @@ public class CategoryManagementPanel extends JPanel implements SessionListener {
         return panel;
     }
 
+    /**
+     * Supprime une catégorie après confirmation.
+     *
+     * @param category La catégorie à supprimer
+     * @throws IllegalStateException Si la catégorie a des profils liés
+     */
     private void handleDeleteCategory(Category category) {
         int confirm = JOptionPane.showConfirmDialog(
                 this,
@@ -428,6 +445,7 @@ public class CategoryManagementPanel extends JPanel implements SessionListener {
         }
     }
 
+    // Crée le bouton "+" circulaire violet
     private JButton createAddButton(String text) {
         JButton button = new JButton(text) {
             @Override
@@ -461,6 +479,7 @@ public class CategoryManagementPanel extends JPanel implements SessionListener {
         return button;
     }
 
+    // Crée un bouton texte sans background
     private JButton createTextButton(String text) {
         JButton button = new JButton(text);
         button.setFont(new Font("Arial", Font.PLAIN, 13));
@@ -485,6 +504,7 @@ public class CategoryManagementPanel extends JPanel implements SessionListener {
         return button;
     }
 
+    // Crée un bouton avec coins arrondis et couleur personnalisable
     private JButton createRoundedButton(String text, Color bgColor) {
         JButton button = new JButton(text);
         button.setFont(new Font("Arial", Font.BOLD, 12));
