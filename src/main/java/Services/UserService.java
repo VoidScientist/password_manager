@@ -12,9 +12,11 @@ import java.util.Arrays;
 
 /**
  * Classe s'occupant d'effectuer les actions telles que connecter, enregistrer et supprimer des utilisateurs.
+ * Elle permet aussi de mettre à jour les profils utilisateur maître.
+ *
  *
  * @author ARCELON Louis, MARTEL Mathieu
- * @version v0.1
+ * @version v0.2
  *
  * @see Repositories.UserProfileRepository
  * @see Entities.UserProfile
