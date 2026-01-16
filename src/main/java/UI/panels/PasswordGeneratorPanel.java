@@ -7,6 +7,10 @@ import java.awt.*;
 import java.security.SecureRandom;
 import Utilities.Security.Password.*;
 
+/**
+ * Classe permettant d'afficher l'onglet de génération de mot de passe.
+ * Elle utilise les classes utilitaires de Utilities.Security.Password
+ */
 public class PasswordGeneratorPanel extends JPanel {
 
     private JTextField passwordField;
@@ -196,6 +200,10 @@ public class PasswordGeneratorPanel extends JPanel {
         generatePassword();
     }
 
+    /**
+     * Méthode de génération de mot de passe.
+     * Utilise les classes utilitaires mentionnées dans la doc de classe.
+     */
     private void generatePassword() {
         int min = (Integer) minSpinner.getValue();
         int max = (Integer) maxSpinner.getValue();
