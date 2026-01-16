@@ -106,7 +106,7 @@ public class VaultPanel extends JPanel implements SessionListener {
         categoryFilter = new JComboBox<>(categoryNames);
         categoryFilter.setPreferredSize(new Dimension(150, 30));
         categoryFilter.setBackground(LIGHT_GRAY);
-        categoryFilter.addActionListener(this::onCategoryFilterSelected);
+        categoryFilter.addActionListener(this::onFilterChanged);
 
         JLabel dateLabel = new JLabel("Jusqu'à");
         dateFilter = new JComboBox<>(new String[]{"Aujourd'hui", "Cette semaine", "Ce mois", "Tous"});
@@ -307,7 +307,18 @@ public class VaultPanel extends JPanel implements SessionListener {
         }
 
         profilesToDisplay = profilesToDisplay.stream()
-                .sorted(Comparator.comparing(Profile::getUsername, String.CASE_INSENSITIVE_ORDER))
+                .filter(profile -> {
+
+                    // toujours afficher les profils sans categories
+                    if (profile.getCategory() == null) return true;
+                    // vérifie si le profil fait partie de la catégorie voulue.
+                    return profile.getCategory().getName().equals(categoryFilter.getSelectedItem());
+
+                })
+                .toList();
+
+        profilesToDisplay = profilesToDisplay.stream()
+                .sorted(Comparator.comparing(Profile::getService, String.CASE_INSENSITIVE_ORDER))
                 .toList();
 
         String nameOrdering = (String) nameFilter.getSelectedItem();
@@ -992,12 +1003,5 @@ public class VaultPanel extends JPanel implements SessionListener {
 
     }
 
-    void onCategoryFilterSelected(ActionEvent e) {
-
-        profiles = ServiceManager.getDataService().findProfilesByCategoryName((String) categoryFilter.getSelectedItem());
-
-        displayAllProfiles();
-
-    }
 
 }

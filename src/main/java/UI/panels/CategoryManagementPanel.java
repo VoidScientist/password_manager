@@ -408,11 +408,23 @@ public class CategoryManagementPanel extends JPanel implements SessionListener {
         // supprimer le profil dans la db et l'interface
         if (confirm == JOptionPane.YES_OPTION) {
 
-            ServiceManager.getDataService().removeCategory(category);
+            try {
+                ServiceManager.getDataService().removeCategory(category);
 
-            categories.remove(category);
+                categories.remove(category);
 
-            displayCategories();
+                displayCategories();
+
+            } catch (IllegalStateException e) {
+
+                JOptionPane.showMessageDialog(
+                        this,
+                        "Vous ne pouvez pas supprimer une catégorie avec des profils liés.",
+                        "Erreur",
+                        JOptionPane.ERROR_MESSAGE
+                );
+
+            }
         }
     }
 
