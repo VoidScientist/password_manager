@@ -25,7 +25,7 @@ import java.security.NoSuchAlgorithmException;
  */
 public class UserService implements SessionListener {
 
-    private final String ALLOWED_REGEX = "^[a-zA-Z0-9_]*$";
+    private final String ALLOWED_REGEX = "^[a-zA-Z].[a-zA-Z0-9_]*$";
     private final int MIN_USERNAME_LENGTH = 3;
     private final int MIN_PASSWORD_LENGTH = 8;
 
@@ -106,8 +106,7 @@ public class UserService implements SessionListener {
 
         if (!isUsernameValid(username)) {
             throw new IllegalArgumentException(
-                    "Le nom d'utilisateur ne peut contenir que des chiffres et des lettres, ou un underscore (_). "
-                    + "Il doit aussi faire plus de " + MIN_USERNAME_LENGTH + " caractères."
+                    "Nom invalide. Doit commencer par une lettre."
             );
         }
 
