@@ -1,0 +1,13 @@
+unnamed package
+Entities
+Managers
+Managers.Interface
+Repositories
+Repositories.Interface
+Services
+UI
+UI.panels
+Utilities
+Utilities.Security
+Utilities.Security.Encryption
+Utilities.Security.Password

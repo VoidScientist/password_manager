@@ -1,17 +1,24 @@
 package UI;
 
+import Managers.Interface.SessionListener;
+import Managers.SessionManager;
 import UI.panels.*;
 
 import javax.swing.*;
 import java.awt.*;
 
-// La fenêtre principale
-public class MainFrame extends JFrame {
+/**
+ * Classe permettant d'afficher la fenêtre principale de l'application.
+ */
+public class MainFrame extends JFrame implements SessionListener {
 
     private SideMenu sideMenu;
     private JPanel contentPanel;
     private CardLayout cardLayout;
     private JPanel mainContainer;
+
+    private LoginPanel loginPanel;
+    private RegisterPanel registerPanel;
 
     private boolean isLoggedIn = false;
 
@@ -34,25 +41,36 @@ public class MainFrame extends JFrame {
         cardLayout = new CardLayout();
         contentPanel.setLayout(cardLayout);
 
+        // Créer et stocker les références aux panels
+        loginPanel = new LoginPanel(this);
+        registerPanel = new RegisterPanel(this);
+
         // Ajouter les différentes pages
-        contentPanel.add(new LoginPanel(this), "login");
-        contentPanel.add(new RegisterPanel(this), "register");
-        contentPanel.add(new SecurityPanel(), "security");
+        contentPanel.add(loginPanel, "login");
+        contentPanel.add(registerPanel, "register");
         contentPanel.add(new PasswordGeneratorPanel(), "generator");
         contentPanel.add(new VaultPanel(), "vault");
         contentPanel.add(new SecurityScorePanel(), "securityscore");
-        contentPanel.add(new ProfilePanel(), "profile");
+        contentPanel.add(new CategoryManagementPanel(), "category");
+        contentPanel.add(new AccountManagementPanel(), "profile");
 
         mainContainer.add(contentPanel, BorderLayout.CENTER);
         add(mainContainer);
+
+        // Enregistrer ce MainFrame comme listener du SessionManager
+        SessionManager.addListener(this);
 
         // Afficher la page de login par défaut
         showPage("login");
     }
 
-    // Méthode appelée après connexion réussie
-    public void onLoginSuccess() {
+    // Méthode appelée lors de la connexion réussie
+    @Override
+    public void onLogin() {
         isLoggedIn = true;
+
+        // Nettoyer les champs du LoginPanel
+        loginPanel.clearFields();
 
         // Ajouter le menu à gauche
         mainContainer.add(sideMenu, BorderLayout.WEST);
@@ -67,12 +85,16 @@ public class MainFrame extends JFrame {
     }
 
     // Méthode appelée lors de la déconnexion
-    public void onLogout() {
+    @Override
+    public void onDisconnect() {
         isLoggedIn = false;
 
         // Retirer et cacher le menu latéral
         sideMenu.setVisible(false);
         mainContainer.remove(sideMenu);
+
+        // Nettoyer les champs du LoginPanel avant de l'afficher
+        loginPanel.clearFields();
 
         // Retourner à la page de login
         showPage("login");
@@ -82,34 +104,18 @@ public class MainFrame extends JFrame {
         mainContainer.repaint();
     }
 
-    // Méthode pour changer de page
+    /**
+     * Méthode permettant de changer de page en donnant le nom de la page.
+     * @param pageName nom de la page vers laquelle switch
+     */
     public void showPage(String pageName) {
+        // Nettoyer les champs avant d'afficher une page
+        if (pageName.equals("login")) {
+            registerPanel.clearFields();
+        } else if (pageName.equals("register")) {
+            loginPanel.clearFields();
+        }
+
         cardLayout.show(contentPanel, pageName);
-    }
-
-
-}
-
-// ===================== Autres pages à implémenter =====================
-
-class SecurityPanel extends JPanel {
-    public SecurityPanel() {
-        setLayout(new BorderLayout());
-        setBackground(Color.WHITE);
-
-        JLabel label = new JLabel("PAGE SÉCURITÉ", SwingConstants.CENTER);
-        label.setFont(new Font("Arial", Font.BOLD, 32));
-        add(label, BorderLayout.CENTER);
-    }
-}
-
-class ProfilePanel extends JPanel {
-    public ProfilePanel() {
-        setLayout(new BorderLayout());
-        setBackground(Color.WHITE);
-
-        JLabel label = new JLabel("PROFIL", SwingConstants.CENTER);
-        label.setFont(new Font("Arial", Font.BOLD, 32));
-        add(label, BorderLayout.CENTER);
     }
 }

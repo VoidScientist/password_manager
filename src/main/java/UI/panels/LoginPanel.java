@@ -1,12 +1,14 @@
 package UI.panels;
 
 import Managers.ServiceManager;
-import Managers.SessionManager;
 import UI.MainFrame;
 
 import javax.swing.*;
 import java.awt.*;
 
+/**
+ * Classe permettant d'afficher le formulaire de login dans l'interface. Référée dans mainFrame par "login".
+ */
 public class LoginPanel extends JPanel {
 
     private static final Color PURPLE_BG = new Color(88, 70, 150);
@@ -36,6 +38,12 @@ public class LoginPanel extends JPanel {
 
         add(leftPanel, BorderLayout.WEST);
         add(rightPanel, BorderLayout.CENTER);
+    }
+
+    public void clearFields() {
+        usernameField.setText("");
+        passwordField.setText("");
+        errorLabel.setText(" ");
     }
 
     private JPanel createLeftPanel() {
@@ -140,6 +148,10 @@ public class LoginPanel extends JPanel {
         passwordField.setFont(new Font("Arial", Font.PLAIN, 14));
         passwordField.setBackground(LIGHT_GRAY);
         passwordField.setBorder(BorderFactory.createEmptyBorder());
+
+        // Ajouter l'action "Enter" pour se connecter
+        passwordField.addActionListener(e -> handleLogin());
+
         passwordPanel.add(passwordField, BorderLayout.CENTER);
 
         // Bouton oeil avec images
@@ -288,6 +300,10 @@ public class LoginPanel extends JPanel {
         return button;
     }
 
+    /**
+     * Gère la connexion utilisateur en faisant appel à {@code UserService.login()}.
+     * Affiche une erreur dans {@code errorLabel} s'il y en a une.
+     */
     private void handleLogin() {
         String username = usernameField.getText();
         char[] password = passwordField.getPassword();
@@ -301,10 +317,6 @@ public class LoginPanel extends JPanel {
                     .login(username, password);
         } catch (Exception e) {
             errorLabel.setText(e.getMessage());
-        }
-
-        if (SessionManager.isConnected()) {
-            mainFrame.onLoginSuccess();
         }
 
     }

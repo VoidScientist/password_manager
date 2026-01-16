@@ -19,7 +19,7 @@ public class UserServiceTests {
     public static void init() throws Exception {
 
         emf = Persistence.createEntityManagerFactory(Config.getTestPersistenceUnit());
-        userService = new UserService(emf);
+        userService = new UserService(emf.createEntityManager());
 
         userService.register(USERNAME_LOGIN_TEST, PASSWORD_LOGIN_TEST.clone());
         SessionManager.disconnect();

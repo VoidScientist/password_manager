@@ -1,10 +1,15 @@
 package UI.panels;
 
+import Managers.SessionManager;
 import UI.MainFrame;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
 
+/**
+ * Classe permettant d'afficher la barre de navigation dans l'application.
+ */
 public class SideMenu extends JPanel {
 
     private MainFrame mainFrame;
@@ -38,11 +43,10 @@ public class SideMenu extends JPanel {
 
         // Boutons du menu
         addMenuButton("Mots de passe", "vault");
-        addMenuButton("Sécurité", "security");
         addMenuButton("Score de sécurité", "securityscore");
         addMenuButton("Générateur", "generator");
-        addMenuButton("Gestion des comptes", "accounts");
-        addMenuButton("Profil", "profile");
+        addMenuButton("Gestion des catégories", "category");
+        addMenuButton("Gestion du compte", "profile");
 
         // Espace flexible en bas
         add(Box.createVerticalGlue());
@@ -60,6 +64,12 @@ public class SideMenu extends JPanel {
         add(Box.createRigidArea(new Dimension(0, 20)));
     }
 
+    /**
+     * Crée un bouton dans la barre de navigation.
+     *
+     * @param text texte d'affichage du bouton
+     * @param pageName nom de la page vers laquelle rediriger
+     */
     private void addMenuButton(String text, String pageName) {
         JButton button = new JButton(text);
         button.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -145,20 +155,28 @@ public class SideMenu extends JPanel {
         button.setHorizontalAlignment(SwingConstants.CENTER);
         button.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
-        button.addActionListener(e -> {
-            int confirm = JOptionPane.showConfirmDialog(
-                    this,
-                    "Êtes-vous sûr de vouloir vous déconnecter ?",
-                    "Confirmation",
-                    JOptionPane.YES_NO_OPTION,
-                    JOptionPane.QUESTION_MESSAGE
-            );
-
-            if (confirm == JOptionPane.YES_OPTION) {
-                mainFrame.onLogout();
-            }
-        });
+        button.addActionListener(this::handleDisconnect);
 
         return button;
+    }
+
+    /**
+     * Déconnecte l'utilisateur grâce à {@code SessionManager.disconnect()}
+     *
+     * @param e ActionEvent passé lors de l'appel du callback. Ignoré ici.
+     */
+    private void handleDisconnect(ActionEvent e) {
+        int confirm = JOptionPane.showConfirmDialog(
+                this,
+                "Êtes-vous sûr de vouloir vous déconnecter ?",
+                "Confirmation",
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.QUESTION_MESSAGE
+        );
+
+        if (confirm == JOptionPane.YES_OPTION) {
+            SessionManager.disconnect();
+        }
+
     }
 }

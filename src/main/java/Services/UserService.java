@@ -1,12 +1,11 @@
 package Services;
 
 import Entities.UserProfile;
+import Managers.Interface.SessionListener;
 import Managers.SessionManager;
 import Repositories.UserProfileRepository;
-import Managers.Interface.SessionListener;
 import Utilities.Security.PasswordHasher;
 import jakarta.persistence.EntityManager;
-import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.EntityTransaction;
 import jakarta.persistence.RollbackException;
 
@@ -14,9 +13,11 @@ import java.security.NoSuchAlgorithmException;
 
 /**
  * Classe s'occupant d'effectuer les actions telles que connecter, enregistrer et supprimer des utilisateurs.
+ * Elle permet aussi de mettre à jour les profils utilisateur maître.
+ *
  *
  * @author ARCELON Louis, MARTEL Mathieu
- * @version v0.1
+ * @version v0.2
  *
  * @see Repositories.UserProfileRepository
  * @see Entities.UserProfile
@@ -24,20 +25,18 @@ import java.security.NoSuchAlgorithmException;
  */
 public class UserService implements SessionListener {
 
-    private final String ALLOWED_REGEX = "^[a-zA-Z0-9_]*$";
+    private final String ALLOWED_REGEX = "^[a-zA-Z].[a-zA-Z0-9_]*$";
     private final int MIN_USERNAME_LENGTH = 3;
     private final int MIN_PASSWORD_LENGTH = 8;
 
-    private final EntityManagerFactory emf;
     private final EntityManager em;
 
     private final UserProfileRepository userRep;
 
 
-    public UserService(EntityManagerFactory emf) {
+    public UserService(EntityManager em) {
 
-        this.emf = emf;
-        this.em = emf.createEntityManager();
+        this.em = em;
 
         this.userRep = new UserProfileRepository(em);
 
@@ -63,19 +62,18 @@ public class UserService implements SessionListener {
             throw new IllegalArgumentException("Il n'existe pas d'utilisateurs avec ce nom d'utilisateur.");
         }
 
-        String loginHash;
 
-        String correctHash = attemptTarget.getPasswordHash().split("\\$")[1];
-        String b64Salt = attemptTarget.getPasswordHash().split("\\$")[0];
+        boolean isPasswordValid;
 
         try {
-            loginHash = PasswordHasher.hashPasswordFromSalt(b64Salt, password);
-        } catch (Exception e) {
-            throw new Exception("Error hashing password");
+            isPasswordValid = checkPassword(password, attemptTarget.getPasswordHash());
+        } catch (NoSuchAlgorithmException e) {
+            throw new Exception("Erreur de hashage du mot de passe");
         }
 
-        if (!loginHash.equals(correctHash))
+        if (!isPasswordValid)
             throw new IllegalArgumentException("Mauvais mot de passe");
+
 
         try {
             SessionManager.setCurrentUser(attemptTarget);
@@ -93,21 +91,22 @@ public class UserService implements SessionListener {
      *
      * @param username nom de l'utilisateur à enregistrer (doit être unique et être alphanumérique + _)
      * @param password mot de passe de l'utilisateur à enregistrer
-     * @return profil de l'utilisateur, géré par l'entity manager de UserService
      * @throws IllegalArgumentException en cas de nom d'utilisateur dupliqué ou invalide
      * @throws Exception au cas où PasswordHasher renvoie une exception
      * @throws IllegalStateException si un utilisateur est déjà connecté
      */
-    public UserProfile register(String username, char[] password)
+    public void register(String username, char[] password)
         throws IllegalArgumentException, IllegalStateException, Exception {
 
+        if (SessionManager.getCurrentUser() != null) {
+            throw new IllegalStateException("Utilisateur déjà connecté");
+        }
+
         EntityTransaction tx = em.getTransaction();
-        UserProfile attemptTarget;
 
         if (!isUsernameValid(username)) {
             throw new IllegalArgumentException(
-                    "Le nom d'utilisateur ne peut contenir que des chiffres et des lettres, ou un underscore (_). "
-                    + "Il doit aussi faire plus de " + MIN_USERNAME_LENGTH + " caractères."
+                    "Nom invalide. Doit commencer par une lettre."
             );
         }
 
@@ -123,11 +122,15 @@ public class UserService implements SessionListener {
 
             UserProfile newProfile = new UserProfile(username, hash);
 
-            attemptTarget = userRep.save(newProfile);
+            userRep.save(newProfile);
 
             tx.commit();
 
         } catch (Exception e) {
+
+            if (tx.isActive()) {
+                tx.rollback();
+            }
 
             if (e.getClass().equals(IllegalStateException.class) || e.getClass().equals(NoSuchAlgorithmException.class)) {
                 throw new Exception("Error hashing password");
@@ -137,13 +140,113 @@ public class UserService implements SessionListener {
                 throw new IllegalArgumentException("Ce nom d'utilisateur existe déjà!");
             }
 
-            return null;
+        }
+
+    }
+
+
+    /**
+     *
+     * Supprime le compte utilisateur de la base de donnée.
+     * Non fonctionnel au moment de l'écriture de ce commentaire.
+     *
+     * TODO: réparer
+     *
+     * @param  password                 mot de passe de l'utilisateur à supprimer (connecté)
+     * @throws IllegalStateException    si aucun utilisateur n'est connecté
+     * @throws IllegalArgumentException en cas de mauvais mot de passe
+     * @throws Exception                erreur générale
+     */
+    public void removeAccount(char[] password)
+            throws IllegalStateException, IllegalArgumentException, Exception {
+
+        if (SessionManager.getCurrentUser() == null) {
+            throw new IllegalStateException("Pas d'utilisateur connecté");
+        }
+
+        UserProfile account = SessionManager.getCurrentUser();
+
+
+        boolean isPasswordValid;
+        try {
+            isPasswordValid = checkPassword(password, account.getPasswordHash());
+        } catch (NoSuchAlgorithmException e) {
+            throw new Exception("Erreur du hashage du mot de passe");
+        }
+
+        if (!isPasswordValid) {
+            throw new IllegalArgumentException("Mauvais mot de passe");
+        }
+
+        EntityTransaction tx = em.getTransaction();
+
+        try {
+
+            tx.begin();
+
+            userRep.delete(account);
+
+            tx.commit();
+
+        } catch (Exception e) {
+
+            if (tx.isActive()) {
+                tx.rollback();
+            }
+
+            throw new Exception("Erreur lors de la déconnexion");
 
         }
 
-        return attemptTarget;
+    }
+
+
+    /**
+     * 
+     * Méthode de mise à jour du profil utilisateur donné. 
+     * Permet de changer de mot de passe et de nom d'utilisateur.
+     * 
+     * @param  profile                      Entité UserProfile à modifier
+     * @param  username                     Nouveau nom d'utilisateur
+     * @param  password                     Nouveau mot de passe
+     * @return                              Le profile managé par le gestionnaire d'entité
+     * @throws IllegalArgumentException     Si nouveau mot de passe invalide
+     * @throws Exception                    Exception générale lors de l'échec de la sauvegarde du profil 
+     */
+    public UserProfile updateProfile(UserProfile profile, String username, char[] password) throws Exception {
+
+        EntityTransaction tx = em.getTransaction();        
+        
+        
+        if (password.length < MIN_PASSWORD_LENGTH) {
+            throw new IllegalArgumentException("Mot de passe trop court: minimum " + MIN_PASSWORD_LENGTH + " caractères.");
+        }
+
+
+        try {
+            tx.begin();
+
+            profile.setUsername(username);
+            profile.setPasswordHash(PasswordHasher.hashPassword(password));
+
+            UserProfile result = userRep.save(profile);
+
+            tx.commit();
+
+            return result;
+
+        } catch (Exception e) {
+
+            if (tx.isActive()) {
+                tx.rollback();
+            }
+
+            throw new Exception("Mise à jour du profil échouée");
+
+        }
 
     }
+
 
     /**
      *
@@ -161,6 +264,39 @@ public class UserService implements SessionListener {
         return isValid && hasEnoughCharacters;
 
     }
+
+
+    /**
+     *
+     * Méthode vérifiant si le mot de passe renseigné correspond à un hash avec salt.
+     * La forme du hash doit être {@code salt$hash}
+     * 
+     * @param  password                 mot de passe à vérifier
+     * @param  hashedPassword           mot de passe hashé
+     * @return                          true ou false en fonction de si le mdp correspond
+     * @throws NoSuchAlgorithmException erreur de hashage
+     */
+    private static boolean checkPassword(char[] password, String hashedPassword)
+            throws NoSuchAlgorithmException {
+
+        String loginHash;
+
+        String correctHash = hashedPassword.split("\\$")[1];
+        String b64Salt = hashedPassword.split("\\$")[0];
+
+        try {
+            loginHash = PasswordHasher.hashPasswordFromSalt(b64Salt, password);
+        } catch (Exception e) {
+            throw new NoSuchAlgorithmException("Error hashing password");
+        }
+
+        return loginHash.equals(correctHash);
+
+    }
+
+
+    @Override
+    public void onLogin() {}
 
     @Override
     public void onDisconnect() {

@@ -50,6 +50,26 @@ public class CategoryRepository extends JPARepository<Category> implements ISecu
     }
 
     /**
+     *
+     * Méthode permettant de récupérer dans la bdd une catégorie avec un nom spécifique.
+     * 
+     * @param  name nom de la catégorie
+     * @param  uuid uuid de l'utilisateur à qui appartient la catégorie
+     * @return      renvoie la catégorie ou null
+     */
+    public Category findByName(String name, String uuid) {
+        try {
+            return this.getEntityManager()
+                    .createQuery("SELECT c FROM Category c WHERE c.owner.uuid = :uuid AND c.name = :name", Category.class)
+                    .setParameter("uuid", uuid)
+                    .setParameter("name", name)
+                    .getSingleResult();
+        } catch (NoResultException e) {
+            return null;
+        }
+    }
+
+    /**
      * Méthode permettant de récupérer toutes les catégories appartenant à un utilisateur donné.
      *
      * @param uuid uiid de l'utilisateur dont on cherche les catégories

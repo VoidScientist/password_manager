@@ -7,6 +7,10 @@ import javax.swing.*;
 import java.awt.*;
 import java.util.Arrays;
 
+/**
+ * Classe qui gère l'affichage du panel d'inscription de l'application.
+ * Référée dans mainFrame par "register"
+ */
 public class RegisterPanel extends JPanel {
 
     private static final Color PURPLE_BG = new Color(88, 70, 150);
@@ -37,6 +41,14 @@ public class RegisterPanel extends JPanel {
 
         add(leftPanel, BorderLayout.WEST);
         add(rightPanel, BorderLayout.CENTER);
+    }
+
+    public void clearFields() {
+        usernameField.setText("");
+        passwordField.setText("");
+        confirmPasswordField.setText("");
+        errorLabel.setText(" ");
+        errorLabel.setForeground(new Color(244, 67, 54)); // Réinitialiser la couleur rouge
     }
 
     private JPanel createLeftPanel() {
@@ -204,6 +216,10 @@ public class RegisterPanel extends JPanel {
         field.setFont(new Font("Arial", Font.PLAIN, 14));
         field.setBackground(LIGHT_GRAY);
         field.setBorder(BorderFactory.createEmptyBorder());
+
+        // Ajouter l'action "Enter" pour créer le compte
+        field.addActionListener(e -> handleRegister());
+
         passwordPanel.add(field, BorderLayout.CENTER);
 
         // Bouton oeil avec images
@@ -315,6 +331,10 @@ public class RegisterPanel extends JPanel {
         return button;
     }
 
+    /**
+     * Gère la création de compte grâce à {@code UserLogin.register()}.
+     * Vérifie plusieurs conditions et affiche les potentielles erreurs sur {@code errorLabel}
+     */
     private void handleRegister() {
         String username = usernameField.getText();
         char[] password = passwordField.getPassword();
@@ -358,7 +378,9 @@ public class RegisterPanel extends JPanel {
         timer.start();
     }
 
-    // TODO: PARLER AVEC MATHIEU DU FAIT QUE REGISTER DANS LA BACKEND TE LOGIN EN MM TEMPS
+    /**
+     * Callback permettant de revenir à la page de connexion.
+     */
     private void handleBackToLogin() {
         errorLabel.setText(" ");
         errorLabel.setForeground(new Color(244, 67, 54)); // Réinitialiser la couleur rouge

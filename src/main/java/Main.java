@@ -2,9 +2,12 @@ import Managers.ServiceManager;
 import UI.MainFrame;
 import Utilities.Config;
 
-
 import javax.swing.*;
 
+/**
+ * Point d'entrée du programme. 
+ * Crée l'UI et initialise le ServiceManager.
+ */
 public class Main {
 
     public static void main(String[] args) {

@@ -11,19 +11,6 @@ import java.util.Objects;
  *
  * <p>C'est la propriétaire des relations avec les autres entités dans la base de donnée.</p>
  *
- * <p>Elle contient:</p>
- * <ul>
- *     <li>id</li>
- *     <li>creationDate</li>
- *     <li>service</li>
- *     <li>username</li>
- *     <li>email</li>
- *     <li>encrypted_password</li>
- *     <li>password</li>
- *     <li>url</li>
- *     <li>owner</li>
- *     <li>category</li>
- * </ul>
  *
  * @author ARCELON Louis, MARTEL Mathieu
  * @version v0.1
@@ -74,16 +61,23 @@ public class Profile {
         this.url = url;
     }
 
+
+    /**
+     * Méthode permettant de crypter le mot de passe du profil avant stockage dans la bdd
+     */
     @PrePersist
     private void prePersist() {
         this.creationDate = LocalDateTime.now();
 
         if (this.owner != null) {
-            password = PasswordEncrypter.encrypt(this.getPassword(), this.owner.getPasswordHash());
+            this.encrypted_password = PasswordEncrypter.encrypt(this.getPassword(), this.owner.getPasswordHash());
         }
 
     }
 
+    /**
+     * Méthode permettant de crypter le mot de passe du profil avant mise à jour dans la bdd
+     */
     @PreUpdate
     private void encryptPassword() {
         if (this.owner != null) {
@@ -139,16 +133,40 @@ public class Profile {
         this.owner = owner;
     }
 
+    public LocalDateTime getCreationDate() {
+        return this.creationDate;
+    }
+
+    public void setEncryptedPassword(String encrypted_password) {
+        this.encrypted_password = encrypted_password;
+    }
+
+    /**
+     * Méthode qui décrypte de manière fainéante le mot de passe du profil et le renvoie.
+     * 
+     * @return mot de passe du profil.
+     */
     public String getPassword() {
         if (password != null) return this.password;
 
         if (this.owner != null) {
-            this.password = PasswordEncrypter.decrypt(encrypted_password, this.owner.getPasswordHash());
+            try {
+                this.password = PasswordEncrypter.decrypt(encrypted_password, this.owner.getPasswordHash());
+            } catch (Exception e) {
+                return null;
+            }
         }
 
         return this.password;
     }
 
+
+    /**
+     * Méthode permettant de changer le mot de passe dans le profil.
+     * Il sera crypté dès la mise à jour du profil dans la bdd.
+     * 
+     * @param password nouveau mot de passe.
+     */
     public void setPassword(String password) {
        this.password = password;
     }

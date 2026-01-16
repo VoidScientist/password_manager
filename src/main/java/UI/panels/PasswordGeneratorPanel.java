@@ -1,10 +1,17 @@
 package UI.panels;
 
+import Utilities.Security.Password.PasswordGenerator;
+import Utilities.Security.Password.PasswordStats;
+import Utilities.Security.Password.PasswordStrength;
+
 import javax.swing.*;
 import java.awt.*;
 import java.security.SecureRandom;
-import Utilities.Security.Password.*;
 
+/**
+ * Classe permettant d'afficher l'onglet de génération de mot de passe.
+ * Elle utilise les classes utilitaires de Utilities.Security.Password
+ */
 public class PasswordGeneratorPanel extends JPanel {
 
     private JTextField passwordField;
@@ -149,6 +156,26 @@ public class PasswordGeneratorPanel extends JPanel {
         maxSpinner.setPreferredSize(new Dimension(60, 25));
         maxPanel.add(maxSpinner);
 
+        minSpinner.addChangeListener(e -> {
+            int min = (Integer) minSpinner.getValue();
+            int max = (Integer) maxSpinner.getValue();
+
+            // Si min devient supérieur à max, ajuster max
+            if (min > max) {
+                maxSpinner.setValue(min);
+            }
+        });
+
+        maxSpinner.addChangeListener(e -> {
+            int min = (Integer) minSpinner.getValue();
+            int max = (Integer) maxSpinner.getValue();
+
+            // Si max devient inférieur à min, ajuster min
+            if (max < min) {
+                minSpinner.setValue(max);
+            }
+        });
+
         lengthPanel.add(minPanel);
         lengthPanel.add(maxPanel);
 
@@ -174,16 +201,18 @@ public class PasswordGeneratorPanel extends JPanel {
         generatePassword();
     }
 
+    /**
+     * Méthode de génération de mot de passe.
+     * Utilise les classes utilitaires mentionnées dans la doc de classe.
+     */
     private void generatePassword() {
         int min = (Integer) minSpinner.getValue();
         int max = (Integer) maxSpinner.getValue();
 
+        // Ajuster automatiquement si min > max (sécurité supplémentaire)
         if (min > max) {
-            JOptionPane.showMessageDialog(this,
-                    "Le minimum doit être inférieur ou égal au maximum",
-                    "Erreur",
-                    JOptionPane.ERROR_MESSAGE);
-            return;
+            max = min;
+            maxSpinner.setValue(max);
         }
 
         // Longueur aléatoire entre min et max

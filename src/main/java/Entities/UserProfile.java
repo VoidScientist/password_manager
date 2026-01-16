@@ -1,6 +1,7 @@
 package Entities;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.Fetch;
 
 import java.util.*;
 
@@ -29,7 +30,7 @@ public class UserProfile {
     @OneToMany(mappedBy="owner", cascade={CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REMOVE})
     private final Set<Profile> profiles = new HashSet<>();
 
-    @OneToMany(mappedBy="owner",  cascade={CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REMOVE})
+    @OneToMany(mappedBy="owner",  cascade={CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REMOVE}, fetch=FetchType.EAGER)
     private final Set<Category> categories = new HashSet<>();
 
     public UserProfile(String username, String passwordHash) {
@@ -49,6 +50,14 @@ public class UserProfile {
 
     public String getPasswordHash() {
         return passwordHash;
+    }
+
+    public void setPasswordHash(String hash) {
+        this.passwordHash = hash;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
     }
 
     public Set<Profile> getProfiles() {
@@ -76,12 +85,7 @@ public class UserProfile {
     public void removeCategory(Category category) throws IllegalArgumentException {
 
         boolean success = this.categories.remove(category);
-        if (success) {
-            category.setOwner(null);
-            for (Profile profile : category.getProfiles()) {
-                category.removeProfile(profile);
-            }
-        } else {
+        if (!success) {
             throw new IllegalArgumentException("No such category in user categories");
         }
 
@@ -101,9 +105,7 @@ public class UserProfile {
     public void removeProfile(Profile profile) throws IllegalArgumentException {
 
         boolean success = this.profiles.remove(profile);
-        if (success) {
-            profile.setOwner(null);
-        } else   {
+        if (!success) {
             throw new IllegalArgumentException("No such profile in user profiles");
         }
 

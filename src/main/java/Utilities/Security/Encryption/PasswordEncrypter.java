@@ -3,18 +3,32 @@ package Utilities.Security.Encryption;
 import javax.crypto.Cipher;
 import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
-
 import java.nio.charset.StandardCharsets;
-
 import java.security.SecureRandom;
 import java.util.Base64;
 
+/**
+ * Classe statique utilitaire permettant de crypter des messages.
+ *
+ * Utilisée notamment pour les {@code Profile}
+ */
 public class PasswordEncrypter {
 
     private static final String ALGORITHM = "AES";
     private static final String ALG_MOD_PAD = "AES/GCM/NoPadding";
 
-    public static String encrypt(String password, String hashedMasterPassword) {
+
+    /**
+     * 
+     * Méthode d'encryption d'un mot de passe via un hash de mot
+     * de passe de profil maître.
+     * 
+     * @param  password             mot de passe à crypter
+     * @param  hashedMasterPassword hash du mot de passe de profil maître
+     * @return                      mot de passe encrypté du format {@code iv$ciphertext}
+     * @throws RuntimeException     émis en cas d'erreur
+     */
+    public static String encrypt(String password, String hashedMasterPassword) throws RuntimeException {
 
         try {
 
@@ -46,7 +60,19 @@ public class PasswordEncrypter {
 
     }
 
-    public static String decrypt(String encryptedPassword, String hashedMasterPassword) {
+
+    /**
+     * 
+     * Méthode de décryptage d'un mot de passe via un hash de mot de passe 
+     * de profil maître
+     * 
+     * @param  encryptedPassword    mot de passe encrypté de forme {@code iv@ciphertext}
+     * @param  hashedMasterPassword hash du mot de passe de profil maître
+     * @return                      mot de passe en plaintext
+     * 
+     * @throws RuntimeException     en cas d'erreur de cryptage
+     */
+    public static String decrypt(String encryptedPassword, String hashedMasterPassword) throws RuntimeException {
 
         try {
 
