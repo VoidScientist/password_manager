@@ -318,7 +318,7 @@ public class AccountManagementPanel extends JPanel implements SessionListener {
         JPanel confirmPanel = new JPanel();
         confirmPanel.setLayout(new BoxLayout(confirmPanel, BoxLayout.Y_AXIS));
 
-        JLabel warningLabel = new JLabel("⚠️ ATTENTION ⚠️");
+        JLabel warningLabel = new JLabel("ATTENTION");
         warningLabel.setFont(new Font("Arial", Font.BOLD, 16));
         warningLabel.setForeground(new Color(220, 53, 69));
         warningLabel.setAlignmentX(Component.CENTER_ALIGNMENT);

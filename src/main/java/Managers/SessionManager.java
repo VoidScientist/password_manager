@@ -24,9 +24,13 @@ public class SessionManager {
 
     private static final Set<SessionListener> listeners = new HashSet<>();
 
+    /**
+     * FIX: Permet maintenant de se reconnecter après une déconnexion
+     */
     public static void setCurrentUser(UserProfile u) throws IllegalStateException {
         if (currentUser != null) {
-            throw new IllegalStateException("UserProfile already set");
+            System.err.println("WARNING: Un utilisateur était déjà connecté. Déconnexion automatique.");
+            disconnect(); // Déconnecter l'utilisateur précédent
         }
         currentUser = u;
         listeners.forEach(SessionListener::onLogin);
@@ -58,11 +62,15 @@ public class SessionManager {
         return currentUser != null;
     }
 
+    /**
+     * FIX: Notification des listeners avant de clear currentUser
+     */
     public static void disconnect() {
-
-        currentUser = null;
-        listeners.forEach(SessionListener::onDisconnect);
-
+        if (currentUser != null) {
+            // Notifier les listeners AVANT de clear
+            listeners.forEach(SessionListener::onDisconnect);
+            currentUser = null;
+        }
     }
 
 }

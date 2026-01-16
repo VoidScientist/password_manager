@@ -13,6 +13,7 @@ import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.EntityTransaction;
 import org.hibernate.Session;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -99,17 +100,60 @@ public class DataService {
     }
 
 
-    public void reencryptPasswords(String oldHash, String newHash) {
+    /**
+     * FIX: Re-encryption transactionnelle avec rollback automatique en cas d'erreur
+     *
+     * @param oldHash Ancien hash du mot de passe maître
+     * @param newHash Nouveau hash du mot de passe maître
+     * @throws IllegalStateException Si la re-encryption échoue (avec rollback automatique)
+     */
+    public void reencryptPasswords(String oldHash, String newHash) throws IllegalStateException {
 
-        for (Profile profile : getProfiles()) {
+        EntityTransaction tx = this.em.getTransaction();
 
-            String oldPw = PasswordEncrypter.decrypt(profile.getEncrypted_password(), oldHash);
-            profile.setEncryptedPassword(PasswordEncrypter.encrypt(oldPw, newHash));
+        // Sauvegarder les anciens mots de passe encryptés pour rollback manuel si besoin
+        List<Profile> profiles = getProfiles();
+        List<String> oldEncryptedPasswords = new ArrayList<>();
 
-            saveProfile(profile);
-
+        for (Profile profile : profiles) {
+            oldEncryptedPasswords.add(profile.getEncrypted_password());
         }
 
+        try {
+            tx.begin();
+
+            for (int i = 0; i < profiles.size(); i++) {
+                Profile profile = profiles.get(i);
+
+                try {
+                    // Décrypter avec l'ancien hash
+                    String plainPassword = PasswordEncrypter.decrypt(profile.getEncrypted_password(), oldHash);
+
+                    // Re-encrypter avec le nouveau hash
+                    String newEncryptedPassword = PasswordEncrypter.encrypt(plainPassword, newHash);
+
+                    // Mettre à jour
+                    profile.setEncryptedPassword(newEncryptedPassword);
+                    profRep.save(profile);
+
+                } catch (Exception e) {
+                    System.err.println("ERREUR lors de la re-encryption du profil " + profile.getService() + ": " + e.getMessage());
+                    throw new IllegalStateException("Impossible de re-encrypter le profil " + profile.getService(), e);
+                }
+            }
+
+            tx.commit();
+            System.out.println("Re-encryption réussie pour " + profiles.size() + " profils");
+
+        } catch (Exception e) {
+
+            if (tx.isActive()) {
+                tx.rollback();
+                System.err.println("ROLLBACK de la re-encryption effectué");
+            }
+
+            throw new IllegalStateException("Échec de la re-encryption. Tous les changements ont été annulés.", e);
+        }
     }
 
 
@@ -192,7 +236,11 @@ public class DataService {
                 tx.rollback();
             }
 
-            throw new IllegalStateException("Impossible de sauvegarder " + errMsg + ".");
+            // FIX: Log l'erreur pour faciliter le débogage
+            System.err.println("ERREUR lors de la sauvegarde de " + errMsg + ": " + e.getMessage());
+            e.printStackTrace();
+
+            throw new IllegalStateException("Impossible de sauvegarder " + errMsg + ".", e);
         }
 
     }
@@ -216,7 +264,11 @@ public class DataService {
                 tx.rollback();
             }
 
-            throw new IllegalStateException("Impossible de supprimer " + errMsg + ".");
+            // FIX: Log l'erreur pour faciliter le débogage
+            System.err.println("ERREUR lors de la suppression de " + errMsg + ": " + e.getMessage());
+            e.printStackTrace();
+
+            throw new IllegalStateException("Impossible de supprimer " + errMsg + ".", e);
 
         }
 

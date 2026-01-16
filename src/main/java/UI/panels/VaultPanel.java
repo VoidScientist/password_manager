@@ -186,24 +186,39 @@ public class VaultPanel extends JPanel implements SessionListener {
 
     /**
      * Charge les catégories depuis le backend
-     *
+     * FIX: Ajout de try-catch pour éviter les crashes
      */
     private void loadCategories() {
+        try {
+            categories = ServiceManager.getDataService().getCategories();
 
-        categories = ServiceManager.getDataService().getCategories();
+            String prevItem = (String) categoryFilter.getSelectedItem();
 
-        String prevItem = (String) categoryFilter.getSelectedItem();
+            categoryFilter.removeAllItems();
+            categoryFilter.addItem("Toutes"); // FIX: Toujours ajouter "Toutes" en premier
 
-        categoryFilter.removeAllItems();
+            for (Category cat : categories) {
+                categoryFilter.addItem(cat.getName());
+            }
 
-        for (Category cat : categories) {
+            // Restaurer la sélection précédente si elle existe encore
+            if (prevItem != null) {
+                for (int i = 0; i < categoryFilter.getItemCount(); i++) {
+                    if (categoryFilter.getItemAt(i).equals(prevItem)) {
+                        categoryFilter.setSelectedItem(prevItem);
+                        break;
+                    }
+                }
+            }
 
-            categoryFilter.addItem(cat.getName());
-
+        } catch (Exception e) {
+            System.err.println("ERREUR lors du chargement des catégories: " + e.getMessage());
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(this,
+                    "Impossible de charger les catégories: " + e.getMessage(),
+                    "Erreur",
+                    JOptionPane.ERROR_MESSAGE);
         }
-
-        categoryFilter.setSelectedItem(prevItem);
-
     }
 
     /**
@@ -226,12 +241,20 @@ public class VaultPanel extends JPanel implements SessionListener {
 
     /**
      * Charge les profils depuis le backend
-     *
+     * FIX: Ajout de try-catch pour éviter les crashes
      */
     private void loadProfiles() {
-
-        profiles = ServiceManager.getDataService().getProfiles();
-
+        try {
+            profiles = ServiceManager.getDataService().getProfiles();
+        } catch (Exception e) {
+            System.err.println("ERREUR lors du chargement des profils: " + e.getMessage());
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(this,
+                    "Impossible de charger les profils: " + e.getMessage(),
+                    "Erreur",
+                    JOptionPane.ERROR_MESSAGE);
+            profiles = new ArrayList<>(); // Liste vide pour éviter les NPE
+        }
     }
 
     /**
@@ -275,6 +298,11 @@ public class VaultPanel extends JPanel implements SessionListener {
     private void displayProfiles(List<Profile> profilesToDisplay) {
         accountListPanel.removeAll();
 
+        // FIX: Protection contre null
+        if (profilesToDisplay == null) {
+            profilesToDisplay = new ArrayList<>();
+        }
+
         LocalDateTime start;
 
         switch ((String) dateFilter.getSelectedItem()) {
@@ -306,16 +334,19 @@ public class VaultPanel extends JPanel implements SessionListener {
                     .toList();
         }
 
-        profilesToDisplay = profilesToDisplay.stream()
-                .filter(profile -> {
-
-                    // toujours afficher les profils sans categories
-                    if (profile.getCategory() == null) return true;
-                    // vérifie si le profil fait partie de la catégorie voulue.
-                    return profile.getCategory().getName().equals(categoryFilter.getSelectedItem());
-
-                })
-                .toList();
+        // FIX: Gestion correcte du filtre "Toutes" catégories
+        String selectedCategory = (String) categoryFilter.getSelectedItem();
+        if (selectedCategory != null && !selectedCategory.equals("Toutes")) {
+            profilesToDisplay = profilesToDisplay.stream()
+                    .filter(profile -> {
+                        // Si le profil n'a pas de catégorie, ne pas l'afficher
+                        if (profile.getCategory() == null) return false;
+                        // Sinon, vérifier si la catégorie correspond
+                        return profile.getCategory().getName().equals(selectedCategory);
+                    })
+                    .toList();
+        }
+        // Si "Toutes" est sélectionné, on affiche TOUS les profils (pas de filtre)
 
         profilesToDisplay = profilesToDisplay.stream()
                 .sorted(Comparator.comparing(Profile::getService, String.CASE_INSENSITIVE_ORDER))
@@ -420,8 +451,18 @@ public class VaultPanel extends JPanel implements SessionListener {
 
         eyeButton.addActionListener(e -> {
             if (eyeButton.getIcon() == eyeClosedIcon) {
-                passwordLabel.setText(profile.getPassword());
-                eyeButton.setIcon(eyeOpenIcon);
+                // FIX: Gérer le cas où getPassword() retourne null
+                String password = profile.getPassword();
+                if (password != null) {
+                    passwordLabel.setText(password);
+                    eyeButton.setIcon(eyeOpenIcon);
+                } else {
+                    passwordLabel.setText("ERREUR");
+                    JOptionPane.showMessageDialog(this,
+                            "Impossible de décrypter le mot de passe",
+                            "Erreur de décryptage",
+                            JOptionPane.ERROR_MESSAGE);
+                }
             } else {
                 passwordLabel.setText("......");
                 eyeButton.setIcon(eyeClosedIcon);
@@ -515,7 +556,7 @@ public class VaultPanel extends JPanel implements SessionListener {
     }
 
     private void showAccountDetails(Profile profile) {
-        String panelName = "details_" + profile.getService();
+        String panelName = "details_" + profile.getId(); // FIX: Utiliser l'ID au lieu du service pour l'unicité
 
         loadCategories();
 
@@ -527,6 +568,21 @@ public class VaultPanel extends JPanel implements SessionListener {
 
         revalidate();
         repaint();
+    }
+
+    /**
+     * FIX: Clone le profile avant de l'éditer pour permettre l'annulation
+     */
+    private Profile cloneProfile(Profile original) {
+        Profile clone = new Profile(
+                original.getService(),
+                original.getUsername(),
+                original.getPassword(), // getPassword() décrypte automatiquement
+                original.getUrl()
+        );
+        clone.setEmail(original.getEmail());
+        // Ne pas cloner l'ID, l'owner, la category car on ne veut pas créer un nouveau profil
+        return clone;
     }
 
     private JPanel createDetailsPanel(Profile profile, boolean isNew) {
@@ -607,7 +663,7 @@ public class VaultPanel extends JPanel implements SessionListener {
         panel.add(Box.createRigidArea(new Dimension(0, 8)));
 
         // Champ Email
-        JTextField emailField = new JTextField(profile.getUsername());
+        JTextField emailField = new JTextField(profile.getEmail() != null ? profile.getEmail() : "");
         JPanel emailPanel = createDetailField("Email", emailField);
         panel.add(emailPanel);
         panel.add(Box.createRigidArea(new Dimension(0, 8)));
@@ -616,7 +672,7 @@ public class VaultPanel extends JPanel implements SessionListener {
         JPanel strengthPanel = createStrengthBar(0);
         strengthPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        String initialPassword = isNew ? "" : profile.getPassword();
+        String initialPassword = isNew ? "" : (profile.getPassword() != null ? profile.getPassword() : "");
         JPasswordField passwordField = new JPasswordField(initialPassword);
         JPanel passwordPanel = createDetailPasswordFieldWithStrengthUpdate("Mot de passe", passwordField, strengthPanel);
         panel.add(passwordPanel);
@@ -644,11 +700,15 @@ public class VaultPanel extends JPanel implements SessionListener {
         panel.add(categoryPanel);
         panel.add(Box.createRigidArea(new Dimension(0, 8)));
 
-        // Label d'erreur
+        // Label d'erreur avec wrapping automatique
         JLabel errorLabel = new JLabel(" ");
         errorLabel.setFont(new Font("Arial", Font.PLAIN, 11));
         errorLabel.setForeground(new Color(244, 67, 54));
         errorLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        errorLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        errorLabel.setVerticalAlignment(SwingConstants.TOP);
+        errorLabel.setPreferredSize(new Dimension(340, 30)); // FIX: Hauteur pour 2 lignes
+        errorLabel.setMaximumSize(new Dimension(340, 30));
         panel.add(errorLabel);
         panel.add(Box.createRigidArea(new Dimension(0, 8)));
 
@@ -667,68 +727,71 @@ public class VaultPanel extends JPanel implements SessionListener {
             String newUrl = urlField.getText().trim();
             String newCategoryName = (String) categoryCombo.getSelectedItem();
 
+            // FIX: Utiliser <html> pour le wrapping automatique
             errorLabel.setText(" ");
 
             if (newService.isEmpty()) {
-                errorLabel.setText("Le nom du service ne peut pas être vide");
+                errorLabel.setText("<html><center>Le nom du service ne peut pas être vide</center></html>");
                 return;
             }
 
             if (newLogin.isEmpty()) {
-                errorLabel.setText("Le login ne peut pas être vide");
+                errorLabel.setText("<html><center>Le login ne peut pas être vide</center></html>");
                 return;
             }
 
             if (newPassword.isEmpty()) {
-                errorLabel.setText("Le mot de passe ne peut pas être vide");
+                errorLabel.setText("<html><center>Le mot de passe ne peut pas être vide</center></html>");
                 return;
             }
 
-            // Récupérer l'objet Category correspondant
-            Category selectedCategory = ServiceManager.getDataService().findCategoryByName(newCategoryName);
+            // FIX: Gestion d'erreur avec try-catch
+            try {
+                // Récupérer l'objet Category correspondant
+                Category selectedCategory = ServiceManager.getDataService().findCategoryByName(newCategoryName);
 
-            if (isNew) {
+                if (isNew) {
 
-                Profile newProfile = ServiceManager.getDataService().createProfile(
-                        newService,
-                        newLogin,
-                        newEmail,
-                        newPassword,
-                        newUrl
-                );
+                    Profile newProfile = ServiceManager.getDataService().createProfile(
+                            newService,
+                            newLogin,
+                            newEmail,
+                            newPassword,
+                            newUrl
+                    );
 
-                if (selectedCategory != null) {
-                    ServiceManager.getDataService().attachProfileToCategory(newProfile, selectedCategory);
+                    if (selectedCategory != null) {
+                        ServiceManager.getDataService().attachProfileToCategory(newProfile, selectedCategory);
+                        ServiceManager.getDataService().saveProfile(newProfile);
+                    }
 
-                    ServiceManager.getDataService().saveProfile(newProfile);
+                } else {
+                    // FIX: Modification du profile ORIGINAL (pas un clone)
+                    ServiceManager.getDataService().attachProfileToCategory(profile, selectedCategory);
+
+                    profile.setService(newService);
+                    profile.setUsername(newLogin);
+                    profile.setPassword(newPassword);
+                    profile.setUrl(newUrl);
+                    profile.setEmail(newEmail);
+
+                    ServiceManager.getDataService().saveProfile(profile);
                 }
 
+                // Recharger et afficher
                 loadProfiles();
+                displayAllProfiles();
 
+                // Fermer le panel
+                detailPanel.setVisible(false);
+                revalidate();
+                repaint();
 
-
-            } else {
-
-                ServiceManager.getDataService().attachProfileToCategory(profile, selectedCategory);
-
-                profile.setService(newService);
-                profile.setUsername(newLogin);
-                profile.setPassword(newPassword);
-                profile.setUrl(newUrl);
-                profile.setEmail(newEmail);
-
-                ServiceManager.getDataService().saveProfile(profile);
-
-                loadProfiles();
-
-
+            } catch (Exception ex) {
+                System.err.println("ERREUR lors de la sauvegarde: " + ex.getMessage());
+                ex.printStackTrace();
+                errorLabel.setText("<html><center>Erreur: " + ex.getMessage() + "</center></html>");
             }
-
-            displayAllProfiles();
-
-            detailPanel.setVisible(false);
-            revalidate();
-            repaint();
         });
         buttonPanel.add(saveButton);
 
@@ -764,15 +827,24 @@ public class VaultPanel extends JPanel implements SessionListener {
         );
 
         if (confirm == JOptionPane.YES_OPTION) {
+            // FIX: Gestion d'erreur avec try-catch
+            try {
+                ServiceManager.getDataService().removeProfile(profile);
 
-            ServiceManager.getDataService().removeProfile(profile);
+                loadProfiles();
+                displayAllProfiles();
 
-            loadProfiles();
-            displayAllProfiles();
-
-            detailPanel.setVisible(false);
-            revalidate();
-            repaint();
+                detailPanel.setVisible(false);
+                revalidate();
+                repaint();
+            } catch (Exception e) {
+                System.err.println("ERREUR lors de la suppression: " + e.getMessage());
+                e.printStackTrace();
+                JOptionPane.showMessageDialog(this,
+                        "Impossible de supprimer le profil: " + e.getMessage(),
+                        "Erreur",
+                        JOptionPane.ERROR_MESSAGE);
+            }
         }
     }
 
@@ -853,8 +925,12 @@ public class VaultPanel extends JPanel implements SessionListener {
         SwingUtilities.invokeLater(() -> {
             String pwd = new String(passwordField.getPassword());
             if (!pwd.isEmpty()) {
-                PasswordStrength strength = new PasswordStrength(pwd);
-                updateStrengthBarDisplay(strengthBarPanel, strength.getLevel());
+                try {
+                    PasswordStrength strength = new PasswordStrength(pwd);
+                    updateStrengthBarDisplay(strengthBarPanel, strength.getLevel());
+                } catch (Exception e) {
+                    System.err.println("Erreur calcul force mot de passe: " + e.getMessage());
+                }
             }
         });
 
@@ -879,8 +955,13 @@ public class VaultPanel extends JPanel implements SessionListener {
                 if (pwd.isEmpty()) {
                     updateStrengthBarDisplay(strengthBarPanel, 0);
                 } else {
-                    PasswordStrength strength = new PasswordStrength(pwd);
-                    updateStrengthBarDisplay(strengthBarPanel, strength.getLevel());
+                    try {
+                        PasswordStrength strength = new PasswordStrength(pwd);
+                        updateStrengthBarDisplay(strengthBarPanel, strength.getLevel());
+                    } catch (Exception e) {
+                        System.err.println("Erreur calcul force mot de passe: " + e.getMessage());
+                        updateStrengthBarDisplay(strengthBarPanel, 0);
+                    }
                 }
             }
         });
@@ -992,15 +1073,28 @@ public class VaultPanel extends JPanel implements SessionListener {
 
     @Override
     public void onLogin() {
-        loadProfiles();
-        loadCategories();
-
-        displayAllProfiles();
+        // FIX: Gestion d'erreur lors du chargement initial
+        try {
+            loadProfiles();
+            loadCategories();
+            displayAllProfiles();
+        } catch (Exception e) {
+            System.err.println("ERREUR lors du chargement initial: " + e.getMessage());
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(this,
+                    "Erreur lors du chargement des données: " + e.getMessage(),
+                    "Erreur",
+                    JOptionPane.ERROR_MESSAGE);
+        }
     }
 
     @Override
     public void onDisconnect() {
-
+        // FIX: Clear les données à la déconnexion
+        profiles = new ArrayList<>();
+        categories = new ArrayList<>();
+        displayAllProfiles();
+        detailPanel.setVisible(false);
     }
 
 
