@@ -18,9 +18,10 @@ import java.util.List;
 
 /**
  * Classe s'occupant d'effectuer les actions sur les Profile et Category.
+ * Permet aussi de réencrypter les mots de passe lors de la MaJ du profil maître.
  *
  * @author ARCELON Louis, MARTEL Mathieu
- * @version v0.1
+ * @version v0.2
  *
  * @see Repositories.ProfileRepository
  * @see Repositories.CategoryRepository
