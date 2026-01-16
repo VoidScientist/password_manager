@@ -6,7 +6,9 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.security.Provider;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import Managers.Interface.SessionListener;
 
@@ -104,16 +106,19 @@ public class VaultPanel extends JPanel implements SessionListener {
         categoryFilter = new JComboBox<>(categoryNames);
         categoryFilter.setPreferredSize(new Dimension(150, 30));
         categoryFilter.setBackground(LIGHT_GRAY);
+        categoryFilter.addActionListener(this::onCategoryFilterSelected);
 
-        JLabel dateLabel = new JLabel("Date");
-        dateFilter = new JComboBox<>(new String[]{"Récent", "Plus ancien", "Cette semaine", "Ce mois"});
+        JLabel dateLabel = new JLabel("Jusqu'à");
+        dateFilter = new JComboBox<>(new String[]{"Aujourd'hui", "Cette semaine", "Ce mois", "Tous"});
         dateFilter.setPreferredSize(new Dimension(120, 30));
         dateFilter.setBackground(LIGHT_GRAY);
+        dateFilter.addActionListener(this::onFilterChanged);
 
         JLabel nameLabel = new JLabel("Nom");
         nameFilter = new JComboBox<>(new String[]{"A-Z", "Z-A"});
         nameFilter.setPreferredSize(new Dimension(100, 30));
         nameFilter.setBackground(LIGHT_GRAY);
+        nameFilter.addActionListener(this::onFilterChanged);
 
         filtersRow.add(categoryLabel);
         filtersRow.add(categoryFilter);
@@ -127,7 +132,7 @@ public class VaultPanel extends JPanel implements SessionListener {
         searchRow.setBackground(Color.WHITE);
 
         searchField = createPlaceholderTextField("Rechercher un compte...", 400, 35);
-        searchField.addActionListener(e -> performSearch());
+        searchField.addActionListener(this::onFilterChanged);
 
         searchRow.add(searchField);
 
@@ -136,6 +141,10 @@ public class VaultPanel extends JPanel implements SessionListener {
         mainPanel.add(searchRow);
 
         return mainPanel;
+    }
+
+    private void onFilterChanged(ActionEvent actionEvent) {
+        displayAllProfiles();
     }
 
     /**
@@ -183,12 +192,25 @@ public class VaultPanel extends JPanel implements SessionListener {
 
         categories = ServiceManager.getDataService().getCategories();
 
+        String prevItem = (String) categoryFilter.getSelectedItem();
+
+        categoryFilter.removeAllItems();
+
+        for (Category cat : categories) {
+
+            categoryFilter.addItem(cat.getName());
+
+        }
+
+        categoryFilter.setSelectedItem(prevItem);
+
     }
 
     /**
      * Récupère les noms des catégories pour la liste déroulante
      */
     private String[] getCategoryNames() {
+
         if (categories == null || categories.isEmpty()) {
             return new String[]{"Toutes"};
         }
@@ -215,34 +237,26 @@ public class VaultPanel extends JPanel implements SessionListener {
     /**
      * Effectue la recherche et affiche les résultats
      */
-    private void performSearch() {
+    private List<Profile> performSearch(List<Profile> profilesToSearch) {
         String searchQuery = searchField.getText().trim();
 
         // Ignorer si c'est le placeholder
         if (searchQuery.isEmpty() || searchQuery.equals("Rechercher un compte...")) {
-            displayAllProfiles();
-            return;
+            return profilesToSearch;
         }
 
-        // TODO: Appel backend pour rechercher
-        // List<Profile> searchResults = profileService.search(searchQuery);
-        // displayProfiles(searchResults);
-
-        // Simulation temporaire (filtrage local)
-        System.out.println("Recherche : " + searchQuery);
+        // Simulation temporaire (filtrage local) // TODO: ahah fix temporaire devient permanent
 
         List<Profile> filteredProfiles = new ArrayList<>();
-        for (Profile profile : profiles) {
+        for (Profile profile : profilesToSearch) {
             // Recherche dans service, username, ou URL
-            if (profile.getService().toLowerCase().contains(searchQuery.toLowerCase()) ||
-                    profile.getUsername().toLowerCase().contains(searchQuery.toLowerCase()) ||
-                    (profile.getUrl() != null && profile.getUrl().toLowerCase().contains(searchQuery.toLowerCase()))) {
+            if (profile.getService().toLowerCase().contains(searchQuery.toLowerCase())) {
                 filteredProfiles.add(profile);
             }
         }
 
-        // Afficher les résultats filtrés
-        displayProfiles(filteredProfiles);
+        // retourne les profiles valides
+        return filteredProfiles;
     }
 
     /**
@@ -261,6 +275,51 @@ public class VaultPanel extends JPanel implements SessionListener {
     private void displayProfiles(List<Profile> profilesToDisplay) {
         accountListPanel.removeAll();
 
+        LocalDateTime start;
+
+        switch ((String) dateFilter.getSelectedItem()) {
+
+            case "Aujourd'hui":
+            {
+                start = LocalDateTime.now().minusDays(1);
+                break;
+            }
+
+            case "Cette semaine":
+            {
+                start = LocalDateTime.now().minusDays(7);
+                break;
+            }
+
+            case "Ce mois": {
+                start = LocalDateTime.now().minusDays(31);
+                break;
+            }
+
+            default: {start = null; break;}
+
+        }
+
+        if (start != null) {
+            profilesToDisplay = profilesToDisplay.stream()
+                    .filter(profile -> profile.getCreationDate().isAfter(start))
+                    .toList();
+        }
+
+        profilesToDisplay = profilesToDisplay.stream()
+                .sorted(Comparator.comparing(Profile::getUsername, String.CASE_INSENSITIVE_ORDER))
+                .toList();
+
+        String nameOrdering = (String) nameFilter.getSelectedItem();
+
+        if (nameOrdering.equals("Z-A")) {
+            profilesToDisplay = profilesToDisplay.reversed();
+        }
+
+        profilesToDisplay = performSearch(profilesToDisplay);
+
+
+
         if (profilesToDisplay.isEmpty()) {
             // Message si aucun profil
             JLabel noResultLabel = new JLabel("Aucun compte trouvé");
@@ -272,6 +331,7 @@ public class VaultPanel extends JPanel implements SessionListener {
             accountListPanel.add(Box.createVerticalGlue());
         } else {
             // Réutilisation de createAccountCard() pour chaque profil
+
             for (Profile profile : profilesToDisplay) {
                 JPanel accountCard = createAccountCard(profile);
                 accountListPanel.add(accountCard);
@@ -430,6 +490,9 @@ public class VaultPanel extends JPanel implements SessionListener {
     private void showNewAccountPanel() {
         String panelName = "new_profile";
         Profile newProfile = new Profile("", "", "", "");
+
+        loadCategories();
+
         JPanel newAccountPanel = createDetailsPanel(newProfile, true);
         detailPanel.add(newAccountPanel, panelName);
 
@@ -442,6 +505,8 @@ public class VaultPanel extends JPanel implements SessionListener {
 
     private void showAccountDetails(Profile profile) {
         String panelName = "details_" + profile.getService();
+
+        loadCategories();
 
         JPanel detailsPanel = createDetailsPanel(profile, false);
         detailPanel.add(detailsPanel, panelName);
@@ -624,10 +689,10 @@ public class VaultPanel extends JPanel implements SessionListener {
                 if (selectedCategory != null) {
                     ServiceManager.getDataService().attachProfileToCategory(newProfile, selectedCategory);
 
-                    newProfile = ServiceManager.getDataService().saveProfile(newProfile);
+                    ServiceManager.getDataService().saveProfile(newProfile);
                 }
 
-                profiles.add(newProfile);
+                loadProfiles();
 
 
 
@@ -648,12 +713,7 @@ public class VaultPanel extends JPanel implements SessionListener {
 
             }
 
-            String searchQuery = searchField.getText().trim();
-            if (searchQuery.isEmpty() || searchQuery.equals("Rechercher un compte...")) {
-                displayAllProfiles();
-            } else {
-                performSearch();
-            }
+            displayAllProfiles();
 
             detailPanel.setVisible(false);
             revalidate();
@@ -696,14 +756,8 @@ public class VaultPanel extends JPanel implements SessionListener {
 
             ServiceManager.getDataService().removeProfile(profile);
 
-            profiles.remove(profile);
-
-            String searchQuery = searchField.getText().trim();
-            if (searchQuery.isEmpty() || searchQuery.equals("Rechercher un compte...")) {
-                displayAllProfiles();
-            } else {
-                performSearch();
-            }
+            loadProfiles();
+            displayAllProfiles();
 
             detailPanel.setVisible(false);
             revalidate();
@@ -937,4 +991,13 @@ public class VaultPanel extends JPanel implements SessionListener {
     public void onDisconnect() {
 
     }
+
+    void onCategoryFilterSelected(ActionEvent e) {
+
+        profiles = ServiceManager.getDataService().findProfilesByCategoryName((String) categoryFilter.getSelectedItem());
+
+        displayAllProfiles();
+
+    }
+
 }

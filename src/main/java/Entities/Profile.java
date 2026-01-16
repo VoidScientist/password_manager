@@ -139,6 +139,10 @@ public class Profile {
         this.owner = owner;
     }
 
+    public LocalDateTime getCreationDate() {
+        return this.creationDate;
+    }
+
     public void setEncryptedPassword(String encrypted_password) {
         this.encrypted_password = encrypted_password;
     }

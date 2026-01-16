@@ -153,6 +153,11 @@ public class DataService {
 
     }
 
+    public List<Profile> findProfilesByCategoryName(String catName) {
+
+        return this.profRep.findByCategoryName(catName, SessionManager.getCurrentUser().getUuid());
+
+    }
 
     public Category findCategoryByName(String name) {
         return this.catRep.findByName(name, SessionManager.getCurrentUser().getUuid());

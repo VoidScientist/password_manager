@@ -62,5 +62,13 @@ public class ProfileRepository extends JPARepository<Profile> implements ISecure
                 .getResultList();
     }
 
+    public List<Profile> findByCategoryName(String catName, String uuid) {
+        return this.getEntityManager()
+                .createQuery("SELECT p FROM Profile p WHERE p.owner.uuid = :uuid AND p.category.name = :name", Profile.class)
+                .setParameter("uuid", uuid)
+                .setParameter("name", catName)
+                .getResultList();
+
+    }
 
 }
