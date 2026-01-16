@@ -214,6 +214,20 @@ public class DataService {
         return saveData(prof, this.profRep, "le profil");
     }
 
+    /**
+     *
+     * Méthode générique de sauvegarde d'Entité utilisant un ISecureRepository.
+     *
+     * @param <T>                   Type de l'entité à sauvegarder
+     * @param  model                 Entité de type <T> à sauvegarder
+     * @param  rep                   Repository lié au type de l'entité à sauvegarder 
+     * @param  errMsg                message d'erreur (passé en argument car plusieurs types en entrée possible)
+     * 
+     * @return                       Entité gérée par le gestionnaire de mot de passe.
+     * @throws IllegalStateException Renvoyée en cas d'erreur de sauvegarde et rollback.
+     *
+     * @see Repositories.Interface.ISecureRepository
+     */
     private <T> T saveData(T model, ISecureRepository<T, ?> rep, String errMsg) throws IllegalStateException {
 
         EntityTransaction tx = this.em.getTransaction();
@@ -234,7 +248,6 @@ public class DataService {
                 tx.rollback();
             }
 
-            // FIX: Log l'erreur pour faciliter le débogage
             System.err.println("ERREUR lors de la sauvegarde de " + errMsg + ": " + e.getMessage());
             e.printStackTrace();
 
@@ -243,6 +256,18 @@ public class DataService {
 
     }
 
+
+    /**
+     *
+     * Méthode générique permettant la suppression d'une entité de la bdd.
+     * 
+     * @param <T>                    Type de l'entité
+     * @param  model                 Instance de l'entité de type <T> gérée par un gestionnaire
+     * @param  rep                   Repository gérant les entités de type <T>
+     * @param  errMsg                message d'erreur personnalisé vu que le type <T>  n'est pas constant
+     * 
+     * @throws IllegalStateException en cas d'impossibilité de suppression.
+     */
     private <T> void removeData(T model, ISecureRepository<T, ?> rep, String errMsg) throws IllegalStateException {
 
         EntityTransaction tx = this.em.getTransaction();
@@ -262,7 +287,6 @@ public class DataService {
                 tx.rollback();
             }
 
-            // FIX: Log l'erreur pour faciliter le débogage
             System.err.println("ERREUR lors de la suppression de " + errMsg + ": " + e.getMessage());
             e.printStackTrace();
 
